@@ -1,0 +1,7 @@
+position (x, y)
+modified by
+velocity (x, y)
+modified by
+acceleration (x, y)
+
+acceleration consists of gravity and thrust from the thruster
