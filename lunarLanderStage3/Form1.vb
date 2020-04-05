@@ -16,18 +16,21 @@
 Imports System.Drawing.Drawing2D
 
 Public Class Form1
-    Dim w As Boolean = False
-    Dim a As Boolean = False
-    Dim s As Boolean = False
-    Dim d As Boolean = False
-    Dim space As Boolean = False
+    Public Class keyInput
+        Public w As Boolean = False
+        Public a As Boolean = False
+        Public s As Boolean = False
+        Public d As Boolean = False
+        Public space As Boolean = False
+    End Class
+
 
     'default to 64
     Dim frameRate As Double = 64
     Dim frameCounter As Integer
 
-    Dim terrainMap(16) As Point
-    Dim terrainRendered As Boolean = False
+    Dim terrainMap(2) As Point
+    Dim terrainRendered As Integer = 64
 
     Public Class landerStatistics
         Public position As Vector
@@ -43,7 +46,7 @@ Public Class Form1
     Public Structure Vector
         Public X As Single
         Public Y As Single
-
+        'make it so that I can add and sub tract vectors, not multiply though
         Public Shared Operator +(ByVal v1 As Vector, ByVal v2 As Vector)
             Dim vsum As Vector
             vsum.X = v1.X + v2.X
@@ -61,9 +64,9 @@ Public Class Form1
     End Structure
 
     Dim lStats As New landerStatistics
+    Dim kPut As New keyInput
 
     Private Sub Form1_Load(sender As Object, e As EventArgs) Handles MyBase.Load
-
         Timer1.Enabled = True
         stopWatch.Start()
 
@@ -79,6 +82,7 @@ Public Class Form1
         lStats.position.X = 100
         lStats.position.Y = 100
 
+
         lStats.velocity.X = 0
         lStats.velocity.Y = 0
 
@@ -87,22 +91,42 @@ Public Class Form1
 
         lStats.angle = 270
 
-        lStats.fuel = 500
+        lStats.fuel = 2000
 
         'generate terrain into array of points?
         'can use:
-        '       midpoint dispacement noise https://stevelosh.com/blog/2016/02/midpoint-displacement/
+        '       midpoint dispacement noise 
         '       https://en.wikipedia.org/wiki/Diamond-square_algorithm#Midpoint_displacement_algorithm
+        Randomize()
+        'better than below:
+
+        Dim heightmap = terrainAlgorithm(2, 2, heightmap)
+        Dim heightmap = terrainAlgorithm(2, 2, heightmap)
+
+
+        '3x3 heightmap complete using the diamond-square algorithm!
+        terrainMap(0).Y = heightmap(0, 1)
+        terrainMap(1).Y = heightmap(1, 1)
+        terrainMap(2).Y = heightmap(2, 1)
+        'dodgy
 
         'idk if any of these are usefull, im using a 2d, x and y grid.
         'array of vectors
-        Dim size As Integer = 16
+        Dim size As Integer = heightmap.GetLength(0) - 1
         'Dim terrainMap(size) As Vector
         Dim randomNumber As System.Random = New System.Random()
         For i As Integer = 0 To size Step 1
             terrainMap(i).X = i * 100
-            terrainMap(i).Y = randomNumber.Next(0, 650)
+            'terrainMap(i).Y = randomNumber.Next(0, 650)
         Next
+        'second hill:
+        'Dim sizeTwo As Integer = 4
+        ''Dim terrainMap(size) As Vector
+        'Dim randomNumberTwo As System.Random = New System.Random()
+        'For i As Integer = 2 To sizeTwo - 1 Step 1
+        '    terrainMap(i).X = i * 100
+        '    'terrainMap(i).Y = randomNumber.Next(0, 650)
+        'Next
 
     End Sub
 
@@ -115,14 +139,16 @@ Public Class Form1
         Dim whitePen As New Pen(Color.White, 3)
         Dim flamePen As New Pen(Color.FromArgb(168, 5, 5), 3)
 
-        If terrainRendered = False Then
-            For i As Integer = 0 To 16 - 1 Step 1
+        If terrainRendered > 0 Then
+            For i As Integer = 0 To terrainMap.Length() - 2 Step 1
                 e.Graphics.DrawLine(whitePen, terrainMap(i), terrainMap(i + 1))
-                Dim pointy As New Point(540, 540)
-                e.Graphics.DrawLine(whitePen, pointy, terrainMap(i + 1))
-                Console.WriteLine("drew line from: " & terrainMap(i).X & "x" & terrainMap(i).Y & " to: " & terrainMap(i + 1).X & "x" & terrainMap(i + 1).Y)
+                'Dim pointy As New Point(540, 540)
+                'e.Graphics.DrawLine(whitePen, pointy, terrainMap(i + 1))
+                'Dim rectangley As New Rectangle(540, 540, 20, 20)
+                'e.Graphics.DrawRectangle(flamePen, rectangley)
+                'Console.WriteLine("drew line from: " & terrainMap(i).X & "x" & terrainMap(i).Y & " to: " & terrainMap(i + 1).X & "x" & terrainMap(i + 1).Y)
             Next
-            terrainRendered = True
+            'terrainRendered -= 1
         End If
 
         frameCounter += 1
@@ -134,9 +160,9 @@ Public Class Form1
         'Console.WriteLine("angle:" & lStats.angle)
 
         'rotate lander based on user input
-        If a = True And lStats.angle - 1 >= 180 Then
+        If kPut.a = True And lStats.angle - 1 >= 180 Then
             lStats.angle -= 1
-        ElseIf d = True And lStats.angle + 1 <= 360 Then
+        ElseIf kPut.d = True And lStats.angle + 1 <= 360 Then
             lStats.angle += 1
         End If
 
@@ -144,7 +170,7 @@ Public Class Form1
         lStats.thrust.Y = Math.Sin(Math.PI / 180 * (lStats.angle)) * lStats.thrustConst
 
         'apply acceleration of thruster or gravity depending on user input
-        If space = True And lStats.fuel > 0 Then
+        If kPut.space = True And lStats.fuel > 0 Then
             lStats.angle = 270
             'double thrust for emergency escape
             lStats.acceleration = lStats.gravity + lStats.thrust + lStats.thrust
@@ -154,9 +180,10 @@ Public Class Form1
                 lStats.fuel = 0
             End If
             Label6.Text = "FUEL:  " & CInt(lStats.fuel)
-        ElseIf w = True And lStats.fuel > 0 Then
+        ElseIf kPut.w = True And lStats.fuel > 0 Then
             'total acceleration is the acceleration from gravity + the acceleration from thrusters
             lStats.acceleration = lStats.gravity + lStats.thrust
+            'lStats.fuel = max(0, lStats.fuel - 0.25)
             If lStats.fuel - 0.25 > 0 Then
                 lStats.fuel -= 0.25
             Else
@@ -164,7 +191,7 @@ Public Class Form1
             End If
             Label6.Text = "FUEL:  " & CInt(lStats.fuel)
         Else
-                lStats.acceleration = lStats.gravity
+            lStats.acceleration = lStats.gravity
         End If
 
         'for my ocd (not actually neccessary, can remove)
@@ -203,8 +230,55 @@ Public Class Form1
 
         checkWin()
 
-        checkFrameRate()
+        CheckFrameRate()
     End Sub
+
+    'generate terrain algorithm
+    Private Function terrainAlgorithm(width As Integer, height As Integer, heightMap As Array)
+        'Dim heightMap(width, height)
+        Dim random As System.Random = New System.Random()
+
+        Dim wORh As Integer = heightMap.GetLength(0) - 1
+
+        'corners, random max = 300
+        heightMap(0, 0) = random.Next(0, 300)
+        heightMap(wORh, 0) = random.Next(0, 300)
+        heightMap(0, wORh) = random.Next(0, 300)
+        heightMap(wORh, wORh) = random.Next(0, 300)
+
+        'middle of "diamond step" unhardcoded:
+        'size must be 2^n + 1 and are zero indexed, therfore, 5 is 4 and can be /2 to get 2.
+        Dim middle As New Point((wORh) / 2, (wORh) / 2)
+
+        'sum center, same for all sizes
+        heightMap(middle.X, middle.Y) = ((heightMap(0, 0) +
+                                          heightMap(wORh, 0) +
+                                          heightMap(0, wORh) +
+                                          heightMap(wORh, wORh)) / 4) +
+                                          random.Next(0, 100)
+        'random amount less than corners
+        'heightMap(1, 1) = ((heightMap(0, 0) + heightMap(2, 0) + heightMap(0, 2) + heightMap(2, 2)) / 4) + random.Next(0, 100)
+
+        Dim edgeCase As Boolean = True
+        'square step: challenging, un hardcode
+        'note: ONLY FOR EDGE CASES: the divide by 3, same for all edge cases
+        If edgeCase = True Then
+            heightMap(middle.X, 0) = (heightMap(0, 0) + heightMap(middle.X, middle.Y) + heightMap(0, wORh) / 3) + random.Next(0, 100)
+            heightMap(0, middle.Y) = (heightMap(0, 0) + heightMap(middle.X, middle.Y) + heightMap(0, wORh) / 3) + random.Next(0, 100)
+            heightMap(wORh, middle.Y) = (heightMap(wORh, 0) + heightMap(middle.X, middle.Y) + heightMap(wORh, wORh) / 3) + random.Next(0, 100)
+            heightMap(middle.X, wORh) = (heightMap(0, 0) + heightMap(middle.X, middle.Y) + heightMap(0, 2) / 3) + random.Next(0, 100)
+        End If
+
+        'check if finished, rudimentary
+        Dim printer As String = ""
+        For x As Integer = 0 To heightMap.GetLength(0) - 1
+            For y As Integer = 0 To heightMap.GetLength(0) - 1
+                printer += heightMap(x, y) & ", "
+            Next
+        Next
+        Console.WriteLine(printer)
+        Return heightMap
+    End Function
 
     Private Sub drawLander(landerLinesPosition As Point, whitePen As Pen, flamePen As Pen, e As PaintEventArgs)
         'lander body
@@ -239,7 +313,7 @@ Public Class Form1
         'draw thruster arc
         'e.Graphics.DrawArc(whitePen, leftThrusterPointE, 20, 20)
         e.Graphics.DrawLine(whitePen, leftThrusterPointE, rightThrusterPointE)
-        If space = True And lStats.fuel > 0 Then
+        If kPut.space = True And lStats.fuel > 0 Then
             'draw the flame
             Dim leftFlameS As New Point(leftPoint.X + 4, leftPoint.Y + 20)
             Dim rightFlameS As New Point(rightPoint.X - 4, leftPoint.Y + 20)
@@ -247,7 +321,7 @@ Public Class Form1
 
             e.Graphics.DrawLine(flamePen, leftFlameS, endFlame)
             e.Graphics.DrawLine(flamePen, rightFlameS, endFlame)
-        ElseIf w = True And lStats.fuel > 0 Then
+        ElseIf kPut.w = True And lStats.fuel > 0 Then
             'draw the flame
             Dim leftFlameS As New Point(leftPoint.X + 4, leftPoint.Y + 20)
             Dim rightFlameS As New Point(rightPoint.X - 4, leftPoint.Y + 20)
@@ -260,7 +334,7 @@ Public Class Form1
 
     'EDIT SO NOT COPY FROM OLD CODE
     Dim stopWatch As New Stopwatch()
-    Private Sub checkFrameRate()
+    Private Sub CheckFrameRate()
         frameRate = frameCounter / stopWatch.Elapsed.TotalSeconds
         Label5.Text = "TIME:  " & CInt(stopWatch.Elapsed.TotalSeconds)
         'displays framerate live, facilitating adjustment of timing parameters if the user wishes to troubleshoot
@@ -286,29 +360,29 @@ Public Class Form1
     'catch keyboard input
     Private Sub Form1_KeyDown(sender As Object, e As KeyEventArgs) Handles Me.KeyDown
         If e.KeyData = Keys.W Then
-            w = True
+            kPut.w = True
         ElseIf e.KeyData = Keys.A Then
-            a = True
+            kPut.a = True
         ElseIf e.KeyData = Keys.S Then
-            s = True
+            kPut.s = True
         ElseIf e.KeyData = Keys.D Then
-            d = True
+            kPut.d = True
         ElseIf e.KeyData = Keys.Space Then
-            space = True
+            kPut.space = True
         End If
 
     End Sub
     Private Sub Form1_KeyUp(sender As Object, e As KeyEventArgs) Handles Me.KeyUp
         If e.KeyData = Keys.W Then
-            w = False
+            kPut.w = False
         ElseIf e.KeyData = Keys.A Then
-            a = False
+            kPut.a = False
         ElseIf e.KeyData = Keys.S Then
-            s = False
+            kPut.s = False
         ElseIf e.KeyData = Keys.D Then
-            d = False
+            kPut.d = False
         ElseIf e.KeyData = Keys.Space Then
-            space = False
+            kPut.space = False
         End If
     End Sub
 
