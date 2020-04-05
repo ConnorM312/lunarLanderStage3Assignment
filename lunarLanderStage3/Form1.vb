@@ -29,7 +29,10 @@ Public Class Form1
     Dim frameRate As Double = 64
     Dim frameCounter As Integer
 
-    Dim terrainMap(2) As Point
+    'unharcode terrainSlice, and delete
+    Dim terrainSlice(2) As Point
+
+
     Dim terrainRendered As Integer = 64
 
     Public Class landerStatistics
@@ -98,34 +101,40 @@ Public Class Form1
         '       midpoint dispacement noise 
         '       https://en.wikipedia.org/wiki/Diamond-square_algorithm#Midpoint_displacement_algorithm
         Randomize()
-        'better than below:
 
-        Dim heightmap = terrainAlgorithm(2, 2, heightmap)
-        Dim heightmap = terrainAlgorithm(2, 2, heightmap)
+        'Max recursion depth = 11, assuming that 1920 is the total side value of heightmap
+        'I found that:
+        'https://www.desmos.com/calculator/eie2mmuwzz
+        'Add to report, visual basic does not support tail-recursion
+
+        'hardcode:
+        Dim sideSize As Integer = 2
+        Dim random As System.Random = New System.Random()
+        'functions
+        Dim rTerrainMap = mapStarter(sideSize, random)
+        recursiveTerrainAlgorithm(rTerrainMap, random, sideSize)
 
 
         '3x3 heightmap complete using the diamond-square algorithm!
-        terrainMap(0).Y = heightmap(0, 1)
-        terrainMap(1).Y = heightmap(1, 1)
-        terrainMap(2).Y = heightmap(2, 1)
+        terrainSlice(0).Y = rTerrainMap(0, 1)
+        terrainSlice(1).Y = rTerrainMap(1, 1)
+        terrainSlice(2).Y = rTerrainMap(2, 1)
         'dodgy
 
         'idk if any of these are usefull, im using a 2d, x and y grid.
         'array of vectors
-        Dim size As Integer = heightmap.GetLength(0) - 1
-        'Dim terrainMap(size) As Vector
+        Dim size As Integer = rTerrainMap.GetLength(0) - 1
         Dim randomNumber As System.Random = New System.Random()
-        For i As Integer = 0 To size Step 1
-            terrainMap(i).X = i * 100
-            'terrainMap(i).Y = randomNumber.Next(0, 650)
+        For i As Integer = 0 To size - 1 Step 1
+            terrainSlice(i).X = i * 100
         Next
         'second hill:
         'Dim sizeTwo As Integer = 4
-        ''Dim terrainMap(size) As Vector
+        ''Dim terrainSlice(size) As Vector
         'Dim randomNumberTwo As System.Random = New System.Random()
         'For i As Integer = 2 To sizeTwo - 1 Step 1
-        '    terrainMap(i).X = i * 100
-        '    'terrainMap(i).Y = randomNumber.Next(0, 650)
+        '    terrainSlice(i).X = i * 100
+        '    'terrainSlice(i).Y = randomNumber.Next(0, 650)
         'Next
 
     End Sub
@@ -140,13 +149,13 @@ Public Class Form1
         Dim flamePen As New Pen(Color.FromArgb(168, 5, 5), 3)
 
         If terrainRendered > 0 Then
-            For i As Integer = 0 To terrainMap.Length() - 2 Step 1
-                e.Graphics.DrawLine(whitePen, terrainMap(i), terrainMap(i + 1))
+            For i As Integer = 0 To terrainSlice.Length() - 2 Step 1
+                e.Graphics.DrawLine(whitePen, terrainSlice(i), terrainSlice(i + 1))
                 'Dim pointy As New Point(540, 540)
-                'e.Graphics.DrawLine(whitePen, pointy, terrainMap(i + 1))
+                'e.Graphics.DrawLine(whitePen, pointy, terrainSlice(i + 1))
                 'Dim rectangley As New Rectangle(540, 540, 20, 20)
                 'e.Graphics.DrawRectangle(flamePen, rectangley)
-                'Console.WriteLine("drew line from: " & terrainMap(i).X & "x" & terrainMap(i).Y & " to: " & terrainMap(i + 1).X & "x" & terrainMap(i + 1).Y)
+                'Console.WriteLine("drew line from: " & terrainSlice(i).X & "x" & terrainSlice(i).Y & " to: " & terrainSlice(i + 1).X & "x" & terrainSlice(i + 1).Y)
             Next
             'terrainRendered -= 1
         End If
@@ -233,52 +242,50 @@ Public Class Form1
         CheckFrameRate()
     End Sub
 
-    'generate terrain algorithm
-    Private Function terrainAlgorithm(width As Integer, height As Integer, heightMap As Array)
-        'Dim heightMap(width, height)
-        Dim random As System.Random = New System.Random()
-
-        Dim wORh As Integer = heightMap.GetLength(0) - 1
+    Private Function mapStarter(sideSize As Integer, random As System.Random)
+        Dim rTerrainMap(sideSize, sideSize)
 
         'corners, random max = 300
-        heightMap(0, 0) = random.Next(0, 300)
-        heightMap(wORh, 0) = random.Next(0, 300)
-        heightMap(0, wORh) = random.Next(0, 300)
-        heightMap(wORh, wORh) = random.Next(0, 300)
+        rTerrainMap(0, 0) = random.Next(0, 300)
+        rTerrainMap(sideSize, 0) = random.Next(0, 300)
+        rTerrainMap(0, sideSize) = random.Next(0, 300)
+        rTerrainMap(sideSize, sideSize) = random.Next(0, 300)
 
+        Return rTerrainMap
+    End Function
+    Private Sub recursiveTerrainAlgorithm(rTerrainMap As Array, random As System.Random, sideSize As Integer)
         'middle of "diamond step" unhardcoded:
         'size must be 2^n + 1 and are zero indexed, therfore, 5 is 4 and can be /2 to get 2.
-        Dim middle As New Point((wORh) / 2, (wORh) / 2)
+        Dim middle As New Point((sideSize) / 2, (sideSize) / 2)
 
-        'sum center, same for all sizes
-        heightMap(middle.X, middle.Y) = ((heightMap(0, 0) +
-                                          heightMap(wORh, 0) +
-                                          heightMap(0, wORh) +
-                                          heightMap(wORh, wORh)) / 4) +
+        'sum middle, same for all sizes
+        rTerrainMap(middle.X, middle.Y) = ((rTerrainMap(0, 0) +
+                                          rTerrainMap(sideSize, 0) +
+                                          rTerrainMap(0, sideSize) +
+                                          rTerrainMap(sideSize, sideSize)) / 4) +
                                           random.Next(0, 100)
         'random amount less than corners
-        'heightMap(1, 1) = ((heightMap(0, 0) + heightMap(2, 0) + heightMap(0, 2) + heightMap(2, 2)) / 4) + random.Next(0, 100)
+        'rTerrainMap(1, 1) = ((rTerrainMap(0, 0) + rTerrainMap(2, 0) + rTerrainMap(0, 2) + rTerrainMap(2, 2)) / 4) + random.Next(0, 100)
 
         Dim edgeCase As Boolean = True
         'square step: challenging, un hardcode
         'note: ONLY FOR EDGE CASES: the divide by 3, same for all edge cases
         If edgeCase = True Then
-            heightMap(middle.X, 0) = (heightMap(0, 0) + heightMap(middle.X, middle.Y) + heightMap(0, wORh) / 3) + random.Next(0, 100)
-            heightMap(0, middle.Y) = (heightMap(0, 0) + heightMap(middle.X, middle.Y) + heightMap(0, wORh) / 3) + random.Next(0, 100)
-            heightMap(wORh, middle.Y) = (heightMap(wORh, 0) + heightMap(middle.X, middle.Y) + heightMap(wORh, wORh) / 3) + random.Next(0, 100)
-            heightMap(middle.X, wORh) = (heightMap(0, 0) + heightMap(middle.X, middle.Y) + heightMap(0, 2) / 3) + random.Next(0, 100)
+            rTerrainMap(middle.X, 0) = (rTerrainMap(0, 0) + rTerrainMap(middle.X, middle.Y) + rTerrainMap(0, sideSize) / 3) + random.Next(0, 100)
+            rTerrainMap(0, middle.Y) = (rTerrainMap(0, 0) + rTerrainMap(middle.X, middle.Y) + rTerrainMap(0, sideSize) / 3) + random.Next(0, 100)
+            rTerrainMap(sideSize, middle.Y) = (rTerrainMap(sideSize, 0) + rTerrainMap(middle.X, middle.Y) + rTerrainMap(sideSize, sideSize) / 3) + random.Next(0, 100)
+            rTerrainMap(middle.X, sideSize) = (rTerrainMap(0, 0) + rTerrainMap(middle.X, middle.Y) + rTerrainMap(0, 2) / 3) + random.Next(0, 100)
         End If
 
         'check if finished, rudimentary
         Dim printer As String = ""
-        For x As Integer = 0 To heightMap.GetLength(0) - 1
-            For y As Integer = 0 To heightMap.GetLength(0) - 1
-                printer += heightMap(x, y) & ", "
+        For x As Integer = 0 To rTerrainMap.GetLength(0) - 1
+            For y As Integer = 0 To rTerrainMap.GetLength(0) - 1
+                printer += rTerrainMap(x, y) & ", "
             Next
         Next
         Console.WriteLine(printer)
-        Return heightMap
-    End Function
+    End Sub
 
     Private Sub drawLander(landerLinesPosition As Point, whitePen As Pen, flamePen As Pen, e As PaintEventArgs)
         'lander body
