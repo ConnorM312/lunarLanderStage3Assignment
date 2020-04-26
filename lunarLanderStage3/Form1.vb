@@ -74,15 +74,16 @@ Public Class Form1
         'Max recursion depth = 11, assuming that 1920 is the total side value of heightmap
         'I found that:
         'https://www.desmos.com/calculator/eie2mmuwzz
-        'Add to report, visual basic does not support tail-recursion
+        'Add to report, visual basic does not support tail-recursion, therefore, infinite recursion is not possible, because the stack will be blown.
 
-        'hardcode:
-        Dim sideSize As Integer = 2
+
         Dim random As System.Random = New System.Random()
-        'functions
-        Dim rTerrainMap As TerrainMap = mapStarter(sideSize, random)
-        Dim index As New Point(0, 0)
-        recursiveTerrainAlgorithm(rTerrainMap, random, sideSize, index)
+        Dim rTerrainMap As TerrainMap = terrainStarter(sideSize, random)
+        Dim middleIndex As New Point(0, 0)
+        'Note: middleIndex is the diamond in the diamond step, and therefore, the square step values are surrounding it (the centre)
+        Dim sideSize As Integer = 1
+        'Note: sideSize is the distance from the middleIndex to the edge of the square which is being constructed.
+        recursiveTerrainAlgorithm(rTerrainMap, random, middleIndex, sideSize)
 
 
         '3x3 heightmap complete using the diamond-square algorithm!
@@ -213,7 +214,7 @@ Public Class Form1
         CheckFrameRate()
     End Sub
 
-    Private Function mapStarter(sideSize As Integer, random As System.Random)
+    Private Function terrainStarter(sideSize As Integer, random As System.Random)
         Dim initData(sideSize, sideSize) As Integer
         Dim terrainMap As New TerrainMap(initData)
 
@@ -227,21 +228,44 @@ Public Class Form1
     End Function
 
     'add to model
-    Private Sub recursiveTerrainAlgorithm(rTerrainMap As TerrainMap, random As System.Random, sideSize As Integer, index As Point)
+    'decrease randomness every recursion
+    Private Sub recursiveTerrainAlgorithm(rTerrainMap As TerrainMap, random As System.Random, middleIndex As Point, size As Integer)
+        'diamond step:
+        Dim diamondValues As Integer = rTerrainMap.GetValue(middleIndex.X - size, middleIndex.Y - size) + rTerrainMap.GetValue(middleIndex.X + size, middleIndex.Y - size) + rTerrainMap.GetValue(middleIndex.X - size, middleIndex.Y + size) + rTerrainMap.GetValue(middleIndex.X + size, middleIndex.Y + size)
+        rTerrainMap.SetValue(diamondValues, middleIndex.X, middleIndex.Y)
+
+        'square step -> clockwise
+        Dim squareValues As Integer = rTerrainMap.GetValue(middleIndex.X, middleIndex.Y - 2 * size) + rTerrainMap.GetValue(middleIndex.X + size, middleIndex.Y - size) + rTerrainMap.GetValue(middleIndex.X, middleIndex.Y) + rTerrainMap.GetValue(middleIndex.X, middleIndex.Y) + rTerrainMap.GetValue(middleIndex.X - size, middleIndex.Y - size)
+        rTerrainMap.SetValue(squareValues, middleIndex.X, middleIndex.Y - size)
+        squareValues = rTerrainMap.GetValue(middleIndex.X + size, middleIndex.Y - size) + rTerrainMap.GetValue(middleIndex.X + 2 * size, middleIndex.Y) + rTerrainMap.GetValue(middleIndex.X + size, middleIndex.Y + size) + rTerrainMap.GetValue(middleIndex.X, middleIndex.Y)
+        rTerrainMap.SetValue(squareValues, middleIndex.X + size, middleIndex.Y)
+        squareValues = rTerrainMap.GetValue(middleIndex.X, middleIndex.Y) + rTerrainMap.GetValue(middleIndex.X + size, middleIndex.Y - size) + rTerrainMap.GetValue(middleIndex.X, middleIndex.Y - 2 * size) + rTerrainMap.GetValue(middleIndex.X - size, middleIndex.Y - size)
+        rTerrainMap.SetValue(squareValues, middleIndex.X, middleIndex.Y + size)
+        squareValues = rTerrainMap.GetValue(middleIndex.X - size, middleIndex.Y - size) + rTerrainMap.GetValue(middleIndex.X, middleIndex.Y) + rTerrainMap.GetValue(middleIndex.X - size, middleIndex.Y + size) + rTerrainMap.GetValue(middleIndex.X - size, middleIndex.Y)
+        rTerrainMap.SetValue(squareValues, middleIndex.X - size, middleIndex.Y)
+
+        'recursion:
+        'determine the middleIndex
+        'determine the size -> distance
+        size -= 1
+        middleIndex = ?
+
+
+
 
 
 
         'middle of "diamond step" unhardcoded:
         'size must be 2^n + 1 and are zero indexed, therfore, 5 is 4 and can be /2 to get 2.
-        Dim middle As New Point((sideSize) / 2, (sideSize) / 2)
+        'Dim middle As New Point((sideSize) / 2, (sideSize) / 2)
 
         'sum middle, same for all sizes
 
-        rTerrainMap.SetValue(((rTerrainMap.GetValue(0, 0) +
-                               rTerrainMap.GetValue(sideSize, 0) +
-                               rTerrainMap.GetValue(0, sideSize) +
-                               rTerrainMap.GetValue(sideSize, sideSize)) / 4) +
-                               random.Next(0, 100), middle.X, middle.Y)
+        'rTerrainMap.SetValue(((rTerrainMap.GetValue(0, 0) +
+        '                       rTerrainMap.GetValue(sideSize, 0) +
+        '                       rTerrainMap.GetValue(0, sideSize) +
+        '                       rTerrainMap.GetValue(sideSize, sideSize)) / 4) +
+        '                       random.Next(0, 100), middle.X, middle.Y)
         'random amount less than corners
         'rTerrainMap(1, 1) = ((rTerrainMap(0, 0) + rTerrainMap(2, 0) + rTerrainMap(0, 2) + rTerrainMap(2, 2)) / 4) + random.Next(0, 100)
 
@@ -259,13 +283,13 @@ Public Class Form1
 
         'WACK
         'check if finished, rudimentary
-        Dim printer As String = ""
-        For x As Integer = 0 To rTerrainMap.GetLength(0) - 1
-            For y As Integer = 0 To rTerrainMap.GetLength(0) - 1
-                printer += rTerrainMap(x, y) & ", "
-            Next
-        Next
-        Console.WriteLine(printer)
+        'Dim printer As String = ""
+        'For x As Integer = 0 To rTerrainMap.GetLength(0) - 1
+        '    For y As Integer = 0 To rTerrainMap.GetLength(0) - 1
+        '        printer += rTerrainMap(x, y) & ", "
+        '    Next
+        'Next
+        'Console.WriteLine(printer)
     End Sub
 
     Private Sub drawLander(landerLinesPosition As Point, whitePen As Pen, flamePen As Pen, e As PaintEventArgs)
