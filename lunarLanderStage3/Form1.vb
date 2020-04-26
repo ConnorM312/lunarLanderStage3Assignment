@@ -4,7 +4,6 @@
 '           -rename LABELS correctly
 '           -fix data types
 '       -->  CHECK game win state
-'       -->  simplift fuel part, line 122
 '       -->  terrain
 '       -->  implement sorting algorithms
 'creep the feathures...
@@ -12,18 +11,20 @@
 '           -establish source control
 '           -uncopy matrix and framecounter
 
-'SUVAT IS FOR CONSTANT ACCELERATION YOU IDIOT
+
+'   -add things to model
+
+
+'Model, view, controller
+'Model:
+'    Describes all data, e.g. position of lander, terrainmap etc.
+'View:
+'   How things are displayed. UI, drawing to screen, drawing text etc.
+'Controller:
+'   Bridge between, manipulates the model.
 Imports System.Drawing.Drawing2D
 
 Public Class Form1
-    Public Class keyInput
-        Public w As Boolean = False
-        Public a As Boolean = False
-        Public s As Boolean = False
-        Public d As Boolean = False
-        Public space As Boolean = False
-    End Class
-
 
     'default to 64
     Dim frameRate As Double = 64
@@ -32,39 +33,7 @@ Public Class Form1
     'unharcode terrainSlice, and delete
     Dim terrainSlice(2) As Point
 
-
     Dim terrainRendered As Integer = 64
-
-    Public Class landerStatistics
-        Public position As Vector
-        Public angle As Double
-        Public velocity As Vector
-        Public acceleration As Vector
-        Public gravity As Vector
-        Public thrust As Vector
-        Public thrustConst As Double
-        Public fuel As Double
-    End Class
-
-    Public Structure Vector
-        Public X As Single
-        Public Y As Single
-        'make it so that I can add and sub tract vectors, not multiply though
-        Public Shared Operator +(ByVal v1 As Vector, ByVal v2 As Vector)
-            Dim vsum As Vector
-            vsum.X = v1.X + v2.X
-            vsum.Y = v1.Y + v2.Y
-            Return vsum
-        End Operator
-
-        Public Shared Operator -(ByVal v1 As Vector, ByVal v2 As Vector)
-            Dim vsum As Vector
-            vsum.X = v1.X - v2.X
-            vsum.Y = v1.Y - v2.Y
-            Return vsum
-        End Operator
-
-    End Structure
 
     Dim lStats As New landerStatistics
     Dim kPut As New keyInput
@@ -111,11 +80,13 @@ Public Class Form1
         Dim sideSize As Integer = 2
         Dim random As System.Random = New System.Random()
         'functions
-        Dim rTerrainMap = mapStarter(sideSize, random)
-        recursiveTerrainAlgorithm(rTerrainMap, random, sideSize)
+        Dim rTerrainMap As TerrainMap = mapStarter(sideSize, random)
+        Dim index As New Point(0, 0)
+        recursiveTerrainAlgorithm(rTerrainMap, random, sideSize, index)
 
 
         '3x3 heightmap complete using the diamond-square algorithm!
+        'hardcoded, ignore
         terrainSlice(0).Y = rTerrainMap(0, 1)
         terrainSlice(1).Y = rTerrainMap(1, 1)
         terrainSlice(2).Y = rTerrainMap(2, 1)
@@ -123,7 +94,7 @@ Public Class Form1
 
         'idk if any of these are usefull, im using a 2d, x and y grid.
         'array of vectors
-        Dim size As Integer = rTerrainMap.GetLength(0) - 1
+        Dim size As Integer = rTerrainMap.GetLength(0)
         Dim randomNumber As System.Random = New System.Random()
         For i As Integer = 0 To size - 1 Step 1
             terrainSlice(i).X = i * 100
@@ -243,40 +214,50 @@ Public Class Form1
     End Sub
 
     Private Function mapStarter(sideSize As Integer, random As System.Random)
-        Dim rTerrainMap(sideSize, sideSize)
+        Dim initData(sideSize, sideSize) As Integer
+        Dim terrainMap As New TerrainMap(initData)
 
-        'corners, random max = 300
-        rTerrainMap(0, 0) = random.Next(0, 300)
-        rTerrainMap(sideSize, 0) = random.Next(0, 300)
-        rTerrainMap(0, sideSize) = random.Next(0, 300)
-        rTerrainMap(sideSize, sideSize) = random.Next(0, 300)
+        '                        random Value,   indicies
+        terrainMap.SetValue(random.Next(0, 300), 0, 0)
+        terrainMap.SetValue(random.Next(0, 300), sideSize, 0)
+        terrainMap.SetValue(random.Next(0, 300), 0, sideSize)
+        terrainMap.SetValue(random.Next(0, 300), sideSize, sideSize)
 
-        Return rTerrainMap
+        Return terrainMap
     End Function
-    Private Sub recursiveTerrainAlgorithm(rTerrainMap As Array, random As System.Random, sideSize As Integer)
+
+    'add to model
+    Private Sub recursiveTerrainAlgorithm(rTerrainMap As TerrainMap, random As System.Random, sideSize As Integer, index As Point)
+
+
+
         'middle of "diamond step" unhardcoded:
         'size must be 2^n + 1 and are zero indexed, therfore, 5 is 4 and can be /2 to get 2.
         Dim middle As New Point((sideSize) / 2, (sideSize) / 2)
 
         'sum middle, same for all sizes
-        rTerrainMap(middle.X, middle.Y) = ((rTerrainMap(0, 0) +
-                                          rTerrainMap(sideSize, 0) +
-                                          rTerrainMap(0, sideSize) +
-                                          rTerrainMap(sideSize, sideSize)) / 4) +
-                                          random.Next(0, 100)
+
+        rTerrainMap.SetValue(((rTerrainMap.GetValue(0, 0) +
+                               rTerrainMap.GetValue(sideSize, 0) +
+                               rTerrainMap.GetValue(0, sideSize) +
+                               rTerrainMap.GetValue(sideSize, sideSize)) / 4) +
+                               random.Next(0, 100), middle.X, middle.Y)
         'random amount less than corners
         'rTerrainMap(1, 1) = ((rTerrainMap(0, 0) + rTerrainMap(2, 0) + rTerrainMap(0, 2) + rTerrainMap(2, 2)) / 4) + random.Next(0, 100)
 
-        Dim edgeCase As Boolean = True
         'square step: challenging, un hardcode
-        'note: ONLY FOR EDGE CASES: the divide by 3, same for all edge cases
-        If edgeCase = True Then
-            rTerrainMap(middle.X, 0) = (rTerrainMap(0, 0) + rTerrainMap(middle.X, middle.Y) + rTerrainMap(0, sideSize) / 3) + random.Next(0, 100)
-            rTerrainMap(0, middle.Y) = (rTerrainMap(0, 0) + rTerrainMap(middle.X, middle.Y) + rTerrainMap(0, sideSize) / 3) + random.Next(0, 100)
-            rTerrainMap(sideSize, middle.Y) = (rTerrainMap(sideSize, 0) + rTerrainMap(middle.X, middle.Y) + rTerrainMap(sideSize, sideSize) / 3) + random.Next(0, 100)
-            rTerrainMap(middle.X, sideSize) = (rTerrainMap(0, 0) + rTerrainMap(middle.X, middle.Y) + rTerrainMap(0, 2) / 3) + random.Next(0, 100)
-        End If
+        'rTerrainMap(middle.X, 0) = (rTerrainMap(0, 0) + rTerrainMap(0) + rTerrainMap(middle.X, middle.Y) + rTerrainMap(0, sideSize) / 4) + random.Next(0, 100)
+        'rTerrainMap(0, middle.Y) = (rTerrainMap(0, 0) + rTerrainMap(middle.X, middle.Y) + rTerrainMap(0, sideSize) / 4) + random.Next(0, 100)
+        'rTerrainMap(sideSize, middle.Y) = (rTerrainMap(sideSize, 0) + rTerrainMap(middle.X, middle.Y) + rTerrainMap(sideSize, sideSize) / 4) + random.Next(0, 100)
+        'rTerrainMap(middle.X, sideSize) = (rTerrainMap(0, 0) + rTerrainMap(middle.X, middle.Y) + rTerrainMap(0, 2) / 4) + random.Next(0, 100)
 
+        'Dim CentreTop = (rTerrainMap.GetValue(middle.X, ) +)
+        'rTerrainMap.SetValue(CentreTop, middle.X, 0)
+
+        'middle and 0 implies that the edge of the array, hence the value above it cannot be reached.
+
+
+        'WACK
         'check if finished, rudimentary
         Dim printer As String = ""
         For x As Integer = 0 To rTerrainMap.GetLength(0) - 1
@@ -392,5 +373,14 @@ Public Class Form1
             kPut.space = False
         End If
     End Sub
+
+End Class
+
+Public Class keyInput
+    Public w As Boolean = False
+    Public a As Boolean = False
+    Public s As Boolean = False
+    Public d As Boolean = False
+    Public space As Boolean = False
 
 End Class
