@@ -2,7 +2,6 @@
     Public Structure Vector
         Public X As Single
         Public Y As Single
-        'make it so that I can add and subtract vectors, not multiply though
         Public Shared Operator +(ByVal v1 As Vector, ByVal v2 As Vector)
             Dim vsum As Vector
             vsum.X = v1.X + v2.X
@@ -29,22 +28,33 @@
         Public fuel As Double
     End Class
 
-    'does edges, makes generic
     Public Class TerrainMap
         Private data As Array
         Public Function GetValue(x As Integer, y As Integer)
-            If x <= data.GetLength(0) And y <= data.GetLength(0) Then
-                Return data(x, y)
-            Else
-                Return 0
+            If x < 0 Then
+                x = Math.Abs(x)
+                x = x Mod data.GetLength(0)
+                x = data.GetLength(0) - x
             End If
+            If y < 0 Then
+                y = Math.Abs(y)
+                y = y Mod data.GetLength(0)
+                y = data.GetLength(0) - y
+            End If
+            'works if in or outside constraints - wraps value around
+            x = x Mod data.GetLength(0)
+            y = y Mod data.GetLength(0)
+
+            Return data(x, y)
         End Function
         Public Sub New(initData As Array)
             Me.data = initData
         End Sub
 
         Public Sub SetValue(value As Integer, x As Integer, y As Integer)
-            Me.data(x, y) = value
+            If (x >= 0) And (x < Me.data.GetLength(0)) And (y >= 0) And (y < Me.data.GetLength(0)) Then
+                Me.data(x, y) = value
+            End If
         End Sub
     End Class
 
