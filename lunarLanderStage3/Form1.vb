@@ -85,23 +85,33 @@ Public Class Form1
         'Note: middleIndex is the diamond in the diamond step, and therefore, the square step values are surrounding it (the centre), in a clockwise fashion
         Dim middleIndex As New Point(sideSize, sideSize)
 
+
+Debugging:
         'Note: sideSize is NOW the distance from the middleIndex to the edge of the square which is being constructed.
         recursiveTerrainAlgorithm(rTerrainMap, random, middleIndex, sideSize)
 
         'debugging
         Dim maxY As Integer = 0
+        Dim minY As Integer = 650
 
         'converts the 3d heightmap to 2d
         For x As Integer = 0 To terrainSlice.GetLength(0) - 1 Step 1
             Dim y As Integer = terrainSlice.GetLength(0) / 2
             'Regulate y magnitude, to keep it on the screen
             'debug
-            If rTerrainMap.GetValue(x, y) > maxY Then
+            If rTerrainMap.GetValue(x, y) < maxY Then
                 maxY = rTerrainMap.GetValue(x, y)
+            ElseIf rTerrainMap.GetValue(x, y) > minY Then
+                minY = rTerrainMap.GetValue(x, y)
             End If
             terrainSlice(x).Y = rTerrainMap.GetValue(x, y)
         Next
         Console.WriteLine("maxY = " & maxY)
+        If maxY < 0 Or minY > 650 Then
+            'not an infinite loop, but very performance heavy
+            GoTo Debugging
+        End If
+
 
         ''3x3 heightmap complete using the diamond-square algorithm!
         ''hardcoded, ignore
@@ -139,11 +149,25 @@ Public Class Form1
         Dim flamePen As New Pen(Color.FromArgb(168, 5, 5), 3)
 
         Dim offset As Integer = Me.Width / terrainSlice.GetLength(0)
+        'debugging
+        Dim max As New Point
+        Dim min As New Point
+
         For i As Integer = 0 To terrainSlice.Length() - 2 Step 1
             Dim offsetPoint As New Point(offset * i, terrainSlice(i).Y)
             Dim newOffsetPoint As New Point(offset * (i + 1), terrainSlice(i + 1).Y)
             e.Graphics.DrawLine(whitePen, offsetPoint, newOffsetPoint)
+
+            'debugging:
+            If offsetPoint.Y < max.Y Then
+                max = offsetPoint
+            ElseIf offsetPoint.Y > min.Y Then
+                min = offsetPoint
+            End If
+
         Next
+        Console.WriteLine("maxY Bravo: " & max.X & ", " & max.Y)
+        e.Graphics.DrawRectangle(flamePen, max.X, max.Y, 650, 650)
 
         frameCounter += 1
 
@@ -275,7 +299,6 @@ Public Class Form1
 
 
         Dim newSize As Integer = size / 2
-
         'Because newSize is an integer, this works:
         If newSize <> 0 Then
             'call recursively
@@ -292,45 +315,6 @@ Public Class Form1
             recursiveTerrainAlgorithm(rTerrainMap, random, newMiddleIndex, newSize)
         End If
 
-
-
-
-
-        'middle of "diamond step" unhardcoded:
-        'size must be 2^n + 1 and are zero indexed, therfore, 5 is 4 and can be /2 to get 2.
-        'Dim middle As New Point((sideSize) / 2, (sideSize) / 2)
-
-        'sum middle, same for all sizes
-
-        'rTerrainMap.SetValue(((rTerrainMap.GetValue(0, 0) +
-        '                       rTerrainMap.GetValue(sideSize, 0) +
-        '                       rTerrainMap.GetValue(0, sideSize) +
-        '                       rTerrainMap.GetValue(sideSize, sideSize)) / 4) +
-        '                       random.Next(0, 100), middle.X, middle.Y)
-        'random amount less than corners
-        'rTerrainMap(1, 1) = ((rTerrainMap(0, 0) + rTerrainMap(2, 0) + rTerrainMap(0, 2) + rTerrainMap(2, 2)) / 4) + random.Next(0, 100)
-
-        'square step: challenging, un hardcode
-        'rTerrainMap(middle.X, 0) = (rTerrainMap(0, 0) + rTerrainMap(0) + rTerrainMap(middle.X, middle.Y) + rTerrainMap(0, sideSize) / 4) + random.Next(0, 100)
-        'rTerrainMap(0, middle.Y) = (rTerrainMap(0, 0) + rTerrainMap(middle.X, middle.Y) + rTerrainMap(0, sideSize) / 4) + random.Next(0, 100)
-        'rTerrainMap(sideSize, middle.Y) = (rTerrainMap(sideSize, 0) + rTerrainMap(middle.X, middle.Y) + rTerrainMap(sideSize, sideSize) / 4) + random.Next(0, 100)
-        'rTerrainMap(middle.X, sideSize) = (rTerrainMap(0, 0) + rTerrainMap(middle.X, middle.Y) + rTerrainMap(0, 2) / 4) + random.Next(0, 100)
-
-        'Dim CentreTop = (rTerrainMap.GetValue(middle.X, ) +)
-        'rTerrainMap.SetValue(CentreTop, middle.X, 0)
-
-        'middle and 0 implies that the edge of the array, hence the value above it cannot be reached.
-
-
-        'WACK
-        'check if finished, rudimentary
-        'Dim printer As String = ""
-        'For x As Integer = 0 To rTerrainMap.GetLength(0) - 1
-        '    For y As Integer = 0 To rTerrainMap.GetLength(0) - 1
-        '        printer += rTerrainMap(x, y) & ", "
-        '    Next
-        'Next
-        'Console.WriteLine(printer)
     End Sub
 
     Private Sub drawLander(landerLinesPosition As Point, whitePen As Pen, flamePen As Pen, e As PaintEventArgs)
