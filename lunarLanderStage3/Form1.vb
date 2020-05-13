@@ -31,7 +31,8 @@ Public Class Form1
     Dim frameCounter As Integer
 
     Dim terrainSlice(0) As Point
-    Dim terrainRendered As Integer = 64
+    Dim terrainBlazed As Boolean = False
+
 
     Dim lStats As New landerStatistics
     Dim kPut As New keyInput
@@ -86,58 +87,49 @@ Public Class Form1
         Dim middleIndex As New Point(sideSize, sideSize)
 
 
-Debugging:
-        'Note: sideSize is NOW the distance from the middleIndex to the edge of the square which is being constructed.
-        recursiveTerrainAlgorithm(rTerrainMap, random, middleIndex, sideSize)
-
         'debugging
-        Dim maxY As Integer = 0
-        Dim minY As Integer = 650
-
-        'converts the 3d heightmap to 2d
-        For x As Integer = 0 To terrainSlice.GetLength(0) - 1 Step 1
-            Dim y As Integer = terrainSlice.GetLength(0) / 2
-            'Regulate y magnitude, to keep it on the screen
-            'debug
-            If rTerrainMap.GetValue(x, y) < maxY Then
-                maxY = rTerrainMap.GetValue(x, y)
-            ElseIf rTerrainMap.GetValue(x, y) > minY Then
-                minY = rTerrainMap.GetValue(x, y)
-            End If
-            terrainSlice(x).Y = rTerrainMap.GetValue(x, y)
-        Next
-        Console.WriteLine("maxY = " & maxY)
-        If maxY < 0 Or minY > 650 Then
-            'not an infinite loop, but very performance heavy
-            GoTo Debugging
-        End If
+        Dim maxY As Integer
+        Dim minY As Integer
+        Dim heightSoftCap As Integer = 300
+        Dim exceeded As Integer
+        Do
+            maxY = 0
+            minY = 650
+            exceeded = 0
+            'Note: sideSize is NOW the distance from the middleIndex to the edge of the square which is being constructed.
+            recursiveTerrainAlgorithm(rTerrainMap, random, middleIndex, sideSize)
 
 
-        ''3x3 heightmap complete using the diamond-square algorithm!
-        ''hardcoded, ignore
-        'terrainSlice(0).Y = rTerrainMap(0, 1)
-        'terrainSlice(1).Y = rTerrainMap(1, 1)
-        'terrainSlice(2).Y = rTerrainMap(2, 1)
-        ''dodgy
+            'converts the 3d heightmap to 2d:
+            For x As Integer = 0 To terrainSlice.GetLength(0) - 1 Step 1
+                Dim y As Integer = terrainSlice.GetLength(0) / 2
+                'Regulate y magnitude, to keep it on the screen
+                If rTerrainMap.GetValue(x, y) < maxY Then
+                    maxY = rTerrainMap.GetValue(x, y)
+                ElseIf rTerrainMap.GetValue(x, y) > minY Then
+                    minY = rTerrainMap.GetValue(x, y)
+                ElseIf rTerrainMap.GetValue(x, y) < heightSoftCap Then
+                    exceeded += 1
+                    Console.WriteLine("exceeded")
+                End If
+                terrainSlice(x).Y = rTerrainMap.GetValue(x, y)
+            Next
 
 
-        ''idk if any of these are usefull, im using a 2d, x and y grid.
-        ''array of vectors
-        'Dim size As Integer = rTerrainMap.GetLength(0)
-        'Dim randomNumber As System.Random = New System.Random()
-        'For i As Integer = 0 To size - 1 Step 1
-        '    terrainSlice(i).X = i * 100
-        'Next
-        ''second hill:
-        ''Dim sizeTwo As Integer = 4
-        '''Dim terrainSlice(size) As Vector
-        ''Dim randomNumberTwo As System.Random = New System.Random()
-        ''For i As Integer = 2 To sizeTwo - 1 Step 1
-        ''    terrainSlice(i).X = i * 100
-        ''    'terrainSlice(i).Y = randomNumber.Next(0, 650)
-        ''Next
+            Console.WriteLine("maxY = " & maxY)
+        Loop While CheckInvalid(maxY, minY, exceeded)
 
     End Sub
+
+    Private Function checkInvalid(maxY As Integer, minY As Integer, exceeded As Integer)
+        If maxY < 0 Or minY > 650 Then
+            Return True
+        ElseIf exceeded > 5 Then
+            Return True
+        Else
+            Return False
+        End If
+    End Function
 
     Private Sub Timer1_Tick(sender As Object, e As EventArgs) Handles Timer1.Tick
         Invalidate()
@@ -148,14 +140,26 @@ Debugging:
         Dim whitePen As New Pen(Color.White, 3)
         Dim flamePen As New Pen(Color.FromArgb(168, 5, 5), 3)
 
+        'draw terrain:
         Dim offset As Integer = Me.Width / terrainSlice.GetLength(0)
         'debugging
         Dim max As New Point
         Dim min As New Point
 
         For i As Integer = 0 To terrainSlice.Length() - 2 Step 1
+
+            'need to store this info for collision detection later
+
             Dim offsetPoint As New Point(offset * i, terrainSlice(i).Y)
             Dim newOffsetPoint As New Point(offset * (i + 1), terrainSlice(i + 1).Y)
+            'trailBlazer code
+            If (Not terrainBlazed) And (Rnd() * 50) > 10 Then
+                Console.WriteLine("called")
+                newOffsetPoint.Y = offsetPoint.Y
+                i -= 1
+
+            End If
+
             e.Graphics.DrawLine(whitePen, offsetPoint, newOffsetPoint)
 
             'debugging:
@@ -165,9 +169,10 @@ Debugging:
                 min = offsetPoint
             End If
 
+            terrainBlazed = True
         Next
-        Console.WriteLine("maxY Bravo: " & max.X & ", " & max.Y)
-        e.Graphics.DrawRectangle(flamePen, max.X, max.Y, 650, 650)
+        e.Graphics.DrawRectangle(flamePen, max.X, 100, 650, 650)
+
 
         frameCounter += 1
 
@@ -212,30 +217,8 @@ Debugging:
             lStats.acceleration = lStats.gravity
         End If
 
-        'for my ocd (not actually neccessary, can remove)
-        'If lStats.angle >= 360 Then
-        '    lStats.angle -= 360
-        'ElseIf lStats.angle <= 0 Then
-        '    lStats.angle += 360
-        'End If
-
         lStats.velocity += lStats.acceleration
         lStats.position += lStats.velocity
-
-        'Dim newPos As Point
-        'Dim currentPos As New Point(lStats.position.X + 10, lStats.position.Y + 10)
-
-        'newPos.X = Math.Cos(Math.PI / 180 * (lStats.angle)) * 50 + currentPos.X
-        'newPos.Y = Math.Sin(Math.PI / 180 * lStats.angle) * 50 + currentPos.Y
-
-        'e.Graphics.DrawLine(whitePen, currentPos, newPos)
-        'e.Graphics.DrawRectangle(whitePen, newPos.X, newPos.Y, 5, 5)
-        'e.Graphics.DrawRectangle(flamePen, lStats.position.X + 10, lStats.position.Y + 17, 2, 2)
-
-        'terrain
-        Dim bottomLeftPoint As New Point(0, (700 - 50))
-        Dim bottomRightPoint As New Point(1920, (700 - 50))
-        e.Graphics.DrawLine(whitePen, bottomLeftPoint, bottomRightPoint)
 
         Dim centerOfRotation As New Point(lStats.position.X + 10, lStats.position.Y + 17)
         'do the rotation matrix (currently only a demo)
