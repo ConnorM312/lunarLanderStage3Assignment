@@ -118,9 +118,9 @@ Public Class Form1
                 terrainSlice(x).Y = rTerrainMap.GetValue(x, y)
 
                 'set flat sections: UNSPAGHETTI, and actually randomize
-                Dim length As Integer = Int((3 * Rnd()) + 1)
+                Dim length As Integer = Int((5 * Rnd()) + 1)
 
-                If x > length + 1 And Int((7 * Rnd()) + 1) > 5 Then
+                If x > length + 1 And Int((7 * Rnd()) + 1) > 6 Then
                     For b As Integer = 1 To length
                         terrainSlice(x - b).Y = rTerrainMap.GetValue(x, y)
                     Next
