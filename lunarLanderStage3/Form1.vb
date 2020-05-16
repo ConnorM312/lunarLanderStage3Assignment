@@ -117,7 +117,7 @@ Public Class Form1
 
 
             Console.WriteLine("maxY = " & maxY)
-        Loop While CheckInvalid(maxY, minY, exceeded)
+        Loop While checkInvalid(maxY, minY, exceeded)
 
     End Sub
 
