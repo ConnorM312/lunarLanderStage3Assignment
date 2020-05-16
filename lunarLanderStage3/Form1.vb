@@ -31,7 +31,6 @@ Public Class Form1
     Dim frameCounter As Integer
 
     Dim terrainSlice(0) As Point
-    Dim terrainBlazed As Boolean = False
 
 
     Dim lStats As New landerStatistics
@@ -61,14 +60,14 @@ Public Class Form1
         lStats.acceleration.Y = 0
 
         lStats.angle = 270
-
         lStats.fuel = 2000
+
+        Randomize()
 
         'generate terrain into array of points?
         'can use:
         '       midpoint dispacement noise 
         '       https://en.wikipedia.org/wiki/Diamond-square_algorithm#Midpoint_displacement_algorithm
-        Randomize()
 
         'Max recursion depth = 11, assuming that 1920 is the total side value of heightmap
         'I found that:
@@ -101,9 +100,11 @@ Public Class Form1
 
 
             'converts the 3d heightmap to 2d:
-            For x As Integer = 0 To terrainSlice.GetLength(0) - 1 Step 1
+            'also adds the flat sections
+            For x As Integer = 0 To terrainSlice.GetLength(0) - 1
                 Dim y As Integer = terrainSlice.GetLength(0) / 2
                 'Regulate y magnitude, to keep it on the screen
+                'diagnostics and parameter setting
                 If rTerrainMap.GetValue(x, y) < maxY Then
                     maxY = rTerrainMap.GetValue(x, y)
                 ElseIf rTerrainMap.GetValue(x, y) > minY Then
@@ -112,22 +113,32 @@ Public Class Form1
                     exceeded += 1
                     Console.WriteLine("exceeded")
                 End If
+
+                'sliced
                 terrainSlice(x).Y = rTerrainMap.GetValue(x, y)
+
+                'set flat sections: UNSPAGHETTI, and actually randomize
+                Dim length As Integer = Int((3 * Rnd()) + 1)
+
+                If x > length + 1 And Int((7 * Rnd()) + 1) > 5 Then
+                    For b As Integer = 1 To length
+                        terrainSlice(x - b).Y = rTerrainMap.GetValue(x, y)
+                    Next
+                End If
             Next
 
-
             Console.WriteLine("maxY = " & maxY)
-        Loop While checkInvalid(maxY, minY, exceeded)
+        Loop While Not (checkValid(maxY, minY, exceeded))
 
     End Sub
 
-    Private Function checkInvalid(maxY As Integer, minY As Integer, exceeded As Integer)
+    Private Function checkValid(maxY As Integer, minY As Integer, exceeded As Integer)
         If maxY < 0 Or minY > 650 Then
-            Return True
-        ElseIf exceeded > 5 Then
-            Return True
-        Else
             Return False
+        ElseIf exceeded > 10 Then
+            Return False
+        Else
+            Return True
         End If
     End Function
 
@@ -150,15 +161,8 @@ Public Class Form1
 
             'need to store this info for collision detection later
 
-            Dim offsetPoint As New Point(offset * i, terrainSlice(i).Y)
+            Dim offsetPoint As New Point(offset * (i), terrainSlice(i).Y)
             Dim newOffsetPoint As New Point(offset * (i + 1), terrainSlice(i + 1).Y)
-            'trailBlazer code
-            If (Not terrainBlazed) And (Rnd() * 50) > 10 Then
-                Console.WriteLine("called")
-                newOffsetPoint.Y = offsetPoint.Y
-                i -= 1
-
-            End If
 
             e.Graphics.DrawLine(whitePen, offsetPoint, newOffsetPoint)
 
@@ -169,7 +173,6 @@ Public Class Form1
                 min = offsetPoint
             End If
 
-            terrainBlazed = True
         Next
         e.Graphics.DrawRectangle(flamePen, max.X, 100, 650, 650)
 
