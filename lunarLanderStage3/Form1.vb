@@ -75,7 +75,7 @@ Public Class Form1
         'Add to report, visual basic does not support tail-recursion, therefore, infinite recursion is not possible, because the stack will be blown.
 
         'the length of the side of the square (0-4), maintaining 2^n + 1 form, however arrays are from 0 to value, not 1...
-        Dim n As Integer = 5
+        Dim n As Integer = 6
         Dim sideSize As Integer = 2 ^ n
         Dim random As System.Random = New System.Random()
         Dim rTerrainMap As TerrainMap = terrainStarter(sideSize, random)
@@ -87,60 +87,55 @@ Public Class Form1
 
 
         'debugging
-        Dim maxY As Integer
-        Dim minY As Integer
-        Dim heightSoftCap As Integer = 300
-        Dim exceeded As Integer
-        Do
-            maxY = 0
-            minY = 650
-            exceeded = 0
-            'Note: sideSize is NOW the distance from the middleIndex to the edge of the square which is being constructed.
-            recursiveTerrainAlgorithm(rTerrainMap, random, middleIndex, sideSize)
+        Dim maxY As Integer = 50
+        Dim minY As Integer = Me.Height - 50
+
+        'Note: sideSize is NOW the distance from the middleIndex to the edge of the square which is being constructed.
+        recursiveTerrainAlgorithm(rTerrainMap, random, middleIndex, sideSize)
 
 
-            'converts the 3d heightmap to 2d:
-            'also adds the flat sections
-            For x As Integer = 0 To terrainSlice.GetLength(0) - 1
-                Dim y As Integer = terrainSlice.GetLength(0) / 2
-                'Regulate y magnitude, to keep it on the screen
-                'diagnostics and parameter setting
-                If rTerrainMap.GetValue(x, y) < maxY Then
-                    maxY = rTerrainMap.GetValue(x, y)
-                ElseIf rTerrainMap.GetValue(x, y) > minY Then
-                    minY = rTerrainMap.GetValue(x, y)
-                ElseIf rTerrainMap.GetValue(x, y) < heightSoftCap Then
-                    exceeded += 1
-                    Console.WriteLine("exceeded")
-                End If
+        'converts the 3d heightmap to 2d:
+        'also adds the flat sections
+        For x As Integer = 0 To terrainSlice.GetLength(0) - 1
+            Dim y As Integer = terrainSlice.GetLength(0) / 2
+            'Regulate y magnitude, to keep it on the screen
 
-                'sliced
-                terrainSlice(x).Y = rTerrainMap.GetValue(x, y)
 
-                'set flat sections: UNSPAGHETTI, and actually randomize
-                Dim length As Integer = Int((5 * Rnd()) + 1)
+            'diagnostics and parameter setting
+            If rTerrainMap.GetValue(x, y) < maxY Then
+                maxY = rTerrainMap.GetValue(x, y)
+            ElseIf rTerrainMap.GetValue(x, y) > minY Then
+                minY = rTerrainMap.GetValue(x, y)
+            End If
 
-                If x > length + 1 And Int((7 * Rnd()) + 1) > 6 Then
-                    For b As Integer = 1 To length
-                        terrainSlice(x - b).Y = rTerrainMap.GetValue(x, y)
-                    Next
-                End If
-            Next
+            'sliced
+            terrainSlice(x).Y = rTerrainMap.GetValue(x, y)
 
-            Console.WriteLine("maxY = " & maxY)
-        Loop While Not (checkValid(maxY, minY, exceeded))
+            'set flat sections: UNSPAGHETTI, and actually randomize
+            Dim length As Integer = Int((5 * Rnd()) + 1)
+
+            If x > length + 1 And Int((7 * Rnd()) + 1) > 6 Then
+                For b As Integer = 1 To length
+                    terrainSlice(x - b).Y = rTerrainMap.GetValue(x, y)
+                Next
+            End If
+        Next
+
+        Console.WriteLine("maxY = " & maxY)
+
+        'normalise to zero
+        Dim normaliseAmount As Integer = -maxY
+        'scale, probably make this a function
+        Dim scaleFactor As Double = CDbl(Me.Height - 100) / (minY - maxY)
+
+        For g As Integer = 0 To terrainSlice.GetLength(0) - 1
+            terrainSlice(g).Y += normaliseAmount
+            terrainSlice(g).Y *= scaleFactor
+            'reshift down
+            terrainSlice(g).Y += 50
+        Next
 
     End Sub
-
-    Private Function checkValid(maxY As Integer, minY As Integer, exceeded As Integer)
-        If maxY < 0 Or minY > 650 Then
-            Return False
-        ElseIf exceeded > 10 Then
-            Return False
-        Else
-            Return True
-        End If
-    End Function
 
     Private Sub Timer1_Tick(sender As Object, e As EventArgs) Handles Timer1.Tick
         Invalidate()
@@ -174,7 +169,7 @@ Public Class Form1
             End If
 
         Next
-        e.Graphics.DrawRectangle(flamePen, max.X, 100, 650, 650)
+        e.Graphics.DrawRectangle(flamePen, max.X, 100, Me.Height, Me.Height)
 
 
         frameCounter += 1
@@ -365,7 +360,7 @@ Public Class Form1
     End Sub
 
     Private Sub checkWin()
-        If (lStats.position.Y + 40) >= 650 And lStats.velocity.Y * 30 < 5 And Math.Abs(lStats.velocity.X * 30) < 5 Then
+        If (lStats.position.Y + 40) >= Me.Height And lStats.velocity.Y * 30 < 5 And Math.Abs(lStats.velocity.X * 30) < 5 Then
             'successfull landing
             lStats.velocity.X = 0
             lStats.velocity.Y = 0
@@ -374,7 +369,7 @@ Public Class Form1
             lStats.gravity.Y = 0
             'lStats.thrust.Y = 0
             'lStats.thrust.X = 0
-        ElseIf (lStats.position.Y + 40) >= 650 Then
+        ElseIf (lStats.position.Y + 40) >= Me.Height Then
             'failed landing
             Me.Close()
         End If

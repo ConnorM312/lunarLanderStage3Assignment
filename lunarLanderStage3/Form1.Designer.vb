@@ -41,9 +41,10 @@ Partial Class Form1
         Me.Label1.AutoSize = True
         Me.Label1.Font = New System.Drawing.Font("Courier New", 15.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.Label1.ForeColor = System.Drawing.Color.White
-        Me.Label1.Location = New System.Drawing.Point(1247, 109)
+        Me.Label1.Location = New System.Drawing.Point(1299, 71)
+        Me.Label1.Margin = New System.Windows.Forms.Padding(2, 0, 2, 0)
         Me.Label1.Name = "Label1"
-        Me.Label1.Size = New System.Drawing.Size(375, 33)
+        Me.Label1.Size = New System.Drawing.Size(250, 22)
         Me.Label1.TabIndex = 0
         Me.Label1.Text = "VERTICAL VELOCITY: 0"
         '
@@ -52,9 +53,10 @@ Partial Class Form1
         Me.Label2.AutoSize = True
         Me.Label2.Font = New System.Drawing.Font("Courier New", 15.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.Label2.ForeColor = System.Drawing.Color.White
-        Me.Label2.Location = New System.Drawing.Point(1247, 59)
+        Me.Label2.Location = New System.Drawing.Point(1299, 38)
+        Me.Label2.Margin = New System.Windows.Forms.Padding(2, 0, 2, 0)
         Me.Label2.Name = "Label2"
-        Me.Label2.Size = New System.Drawing.Size(411, 33)
+        Me.Label2.Size = New System.Drawing.Size(274, 22)
         Me.Label2.TabIndex = 1
         Me.Label2.Text = "HORIZONTAL VELOCITY: 0"
         '
@@ -63,9 +65,10 @@ Partial Class Form1
         Me.Label3.AutoSize = True
         Me.Label3.Font = New System.Drawing.Font("Courier New", 15.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.Label3.ForeColor = System.Drawing.Color.White
-        Me.Label3.Location = New System.Drawing.Point(1247, 9)
+        Me.Label3.Location = New System.Drawing.Point(1299, 6)
+        Me.Label3.Margin = New System.Windows.Forms.Padding(2, 0, 2, 0)
         Me.Label3.Name = "Label3"
-        Me.Label3.Size = New System.Drawing.Size(213, 33)
+        Me.Label3.Size = New System.Drawing.Size(142, 22)
         Me.Label3.TabIndex = 2
         Me.Label3.Text = "ALTITUDE: 0"
         '
@@ -74,9 +77,10 @@ Partial Class Form1
         Me.Label4.AutoSize = True
         Me.Label4.Font = New System.Drawing.Font("Courier New", 15.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.Label4.ForeColor = System.Drawing.Color.White
-        Me.Label4.Location = New System.Drawing.Point(12, 9)
+        Me.Label4.Location = New System.Drawing.Point(8, 6)
+        Me.Label4.Margin = New System.Windows.Forms.Padding(2, 0, 2, 0)
         Me.Label4.Name = "Label4"
-        Me.Label4.Size = New System.Drawing.Size(159, 33)
+        Me.Label4.Size = New System.Drawing.Size(106, 22)
         Me.Label4.TabIndex = 5
         Me.Label4.Text = "SCORE: 0"
         '
@@ -85,9 +89,10 @@ Partial Class Form1
         Me.Label5.AutoSize = True
         Me.Label5.Font = New System.Drawing.Font("Courier New", 15.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.Label5.ForeColor = System.Drawing.Color.White
-        Me.Label5.Location = New System.Drawing.Point(12, 59)
+        Me.Label5.Location = New System.Drawing.Point(8, 38)
+        Me.Label5.Margin = New System.Windows.Forms.Padding(2, 0, 2, 0)
         Me.Label5.Name = "Label5"
-        Me.Label5.Size = New System.Drawing.Size(159, 33)
+        Me.Label5.Size = New System.Drawing.Size(106, 22)
         Me.Label5.TabIndex = 4
         Me.Label5.Text = "TIME:  0"
         '
@@ -96,18 +101,19 @@ Partial Class Form1
         Me.Label6.AutoSize = True
         Me.Label6.Font = New System.Drawing.Font("Courier New", 15.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.Label6.ForeColor = System.Drawing.Color.White
-        Me.Label6.Location = New System.Drawing.Point(12, 109)
+        Me.Label6.Location = New System.Drawing.Point(8, 71)
+        Me.Label6.Margin = New System.Windows.Forms.Padding(2, 0, 2, 0)
         Me.Label6.Name = "Label6"
-        Me.Label6.Size = New System.Drawing.Size(195, 33)
+        Me.Label6.Size = New System.Drawing.Size(130, 22)
         Me.Label6.TabIndex = 3
         Me.Label6.Text = "FUEL:  500"
         '
         'Form1
         '
-        Me.AutoScaleDimensions = New System.Drawing.SizeF(9.0!, 20.0!)
+        Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.BackColor = System.Drawing.Color.Black
-        Me.ClientSize = New System.Drawing.Size(1898, 1024)
+        Me.ClientSize = New System.Drawing.Size(1584, 861)
         Me.Controls.Add(Me.Label4)
         Me.Controls.Add(Me.Label5)
         Me.Controls.Add(Me.Label6)
@@ -115,8 +121,10 @@ Partial Class Form1
         Me.Controls.Add(Me.Label2)
         Me.Controls.Add(Me.Label1)
         Me.DoubleBuffered = True
-        Me.MaximumSize = New System.Drawing.Size(1920, 1080)
-        Me.MinimumSize = New System.Drawing.Size(1920, 1080)
+        Me.Margin = New System.Windows.Forms.Padding(2)
+        Me.MaximumSize = New System.Drawing.Size(1600, 900)
+        Me.MinimizeBox = False
+        Me.MinimumSize = New System.Drawing.Size(1600, 900)
         Me.Name = "Form1"
         Me.Text = "Form1"
         Me.ResumeLayout(False)
