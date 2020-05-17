@@ -57,5 +57,12 @@
             End If
         End Sub
     End Class
+    Public Class keyInput
+        Public w As Boolean = False
+        Public a As Boolean = False
+        Public s As Boolean = False
+        Public d As Boolean = False
+        Public space As Boolean = False
 
+    End Class
 End Module

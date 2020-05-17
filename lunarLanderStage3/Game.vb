@@ -1,27 +1,12 @@
-﻿'TODO LIST:
-'           -implement XML documentation
-'           -rename files correctly
-'           -rename LABELS correctly
-'           -fix data types
-'       -->  CHECK game win state
-'       -->  terrain
-'       -->  implement sorting algorithms
-'creep the feathures...
-'           -CUT STUFF OUT OF THE MAIN GAME LOOP
-'           -establish source control
-'           -uncopy matrix and framecounter
-
-
-'   -add things to model
-
-
-'Model, view, controller
+﻿'Model, view, controller
 'Model:
 '    Describes all data, e.g. position of lander, terrainmap etc.
 'View:
 '   How things are displayed. UI, drawing to screen, drawing text etc.
 'Controller:
 '   Bridge between, manipulates the model.
+
+'Game.vb = view + controller
 Imports System.Drawing.Drawing2D
 
 Public Class Game
@@ -31,7 +16,7 @@ Public Class Game
     Dim frameCounter As Integer
 
     Dim terrainSlice(0) As Point
-
+    Dim terrainCollider(0) As Point
 
     Dim lStats As New landerStatistics
     Dim kPut As New keyInput
@@ -123,20 +108,29 @@ Public Class Game
 
         Console.WriteLine("maxY = " & maxY)
 
+        'THis code ensures that the terrain conforms to the desired heights and depths
+        'It ensures that load times are always the same, with no INFINITE load times. - allows very high heightmap resolution.
         'normalise to zero
         Dim normaliseAmount As Integer = -maxY
         'scale, probably make this a function
         Dim scaleFactor As Double = CDbl(Me.Height - 100) / (minY - maxY)
 
-        For g As Integer = 0 To terrainSlice.GetLength(0) - 1
-            terrainSlice(g).Y += normaliseAmount
-            terrainSlice(g).Y *= scaleFactor
+        For x As Integer = 0 To terrainSlice.GetLength(0) - 1
+            terrainSlice(x).Y += normaliseAmount
+            terrainSlice(x).Y *= scaleFactor
             'reshift down
-            terrainSlice(g).Y += 50
+            terrainSlice(x).Y += 50
         Next
 
-        'can also flip terrain upside down if neccessary
-        'If terrainSlice() Then
+        'can also flip terrain upside down if neccessary - provides clearance for start
+        Dim xCoordOfStart As Integer = lStats.position.X / (Me.Width / terrainSlice.GetLength(0))
+        If terrainSlice(xCoordOfStart).Y < lStats.position.X + 200 Then
+            'flip terrain:
+            For x As Integer = 0 To terrainSlice.GetLength(0) - 1
+                terrainSlice(x).Y = Me.Height - terrainSlice(x).Y
+            Next
+            Console.WriteLine("Flip terrain")
+        End If
 
     End Sub
 
@@ -151,6 +145,7 @@ Public Class Game
 
         'draw terrain:
         Dim offset As Integer = Me.Width / terrainSlice.GetLength(0)
+        ReDim Preserve terrainCollider(terrainSlice.Length - 1)
 
         For i As Integer = 0 To terrainSlice.Length() - 2 Step 1
 
@@ -158,7 +153,8 @@ Public Class Game
 
             Dim offsetPoint As New Point(offset * (i), terrainSlice(i).Y)
             Dim newOffsetPoint As New Point(offset * (i + 1), terrainSlice(i + 1).Y)
-
+            terrainCollider(i) = offsetPoint
+            terrainCollider(i + 1) = newOffsetPoint
             e.Graphics.DrawLine(whitePen, offsetPoint, newOffsetPoint)
 
         Next
@@ -366,6 +362,30 @@ Public Class Game
             'failed landing
             Me.Close()
         End If
+
+        'actual implmentation:
+        'find closest point above, and below
+        Dim closestLeft As New Point(0, 0)
+        Dim closestRight As New Point(0, 0)
+        For x As Integer = 0 To terrainCollider.Length - 2
+            If lStats.position.X > closestLeft.X Then
+                closestLeft = terrainCollider(x)
+                closestRight = terrainCollider(x + 1)
+            End If
+        Next
+        Console.WriteLine("left: " & closestLeft.X)
+
+        'create a triangle from closestLeft to lstats.position
+        Dim baseLength As Integer = lStats.position.X - closestLeft.X
+        '                                               opposite                     adjacent    
+        Dim collisAngle As Double = Math.Atan((closestRight.Y - closestLeft.Y) / (closestRight.X - closestLeft.X))
+        'clean up maths: (factor out tan)
+        Dim collisHeight As Integer = (Math.Tan(collisAngle) * baseLength) + closestLeft.Y
+        Console.WriteLine("collision height: " & collisHeight)
+        If lStats.position.Y >= collisHeight Then
+            Me.Close()
+        End If
+
     End Sub
 
     'catch keyboard input
@@ -404,11 +424,4 @@ Public Class Game
 
 End Class
 
-Public Class keyInput
-    Public w As Boolean = False
-    Public a As Boolean = False
-    Public s As Boolean = False
-    Public d As Boolean = False
-    Public space As Boolean = False
 
-End Class
