@@ -24,7 +24,7 @@
 '   Bridge between, manipulates the model.
 Imports System.Drawing.Drawing2D
 
-Public Class Form1
+Public Class Game
 
     'default to 64
     Dim frameRate As Double = 64
@@ -135,6 +135,9 @@ Public Class Form1
             terrainSlice(g).Y += 50
         Next
 
+        'can also flip terrain upside down if neccessary
+        'If terrainSlice() Then
+
     End Sub
 
     Private Sub Timer1_Tick(sender As Object, e As EventArgs) Handles Timer1.Tick
@@ -148,9 +151,6 @@ Public Class Form1
 
         'draw terrain:
         Dim offset As Integer = Me.Width / terrainSlice.GetLength(0)
-        'debugging
-        Dim max As New Point
-        Dim min As New Point
 
         For i As Integer = 0 To terrainSlice.Length() - 2 Step 1
 
@@ -161,15 +161,7 @@ Public Class Form1
 
             e.Graphics.DrawLine(whitePen, offsetPoint, newOffsetPoint)
 
-            'debugging:
-            If offsetPoint.Y < max.Y Then
-                max = offsetPoint
-            ElseIf offsetPoint.Y > min.Y Then
-                min = offsetPoint
-            End If
-
         Next
-        e.Graphics.DrawRectangle(flamePen, max.X, 100, Me.Height, Me.Height)
 
 
         frameCounter += 1
@@ -352,6 +344,7 @@ Public Class Form1
 
     'EDIT SO NOT COPY FROM OLD CODE
     Dim stopWatch As New Stopwatch()
+
     Private Sub CheckFrameRate()
         frameRate = frameCounter / stopWatch.Elapsed.TotalSeconds
         Label5.Text = "TIME:  " & CInt(stopWatch.Elapsed.TotalSeconds)
@@ -376,6 +369,11 @@ Public Class Form1
     End Sub
 
     'catch keyboard input
+    ''' <summary>
+    ''' Function sets boolean values of class keyInput in accordance with KeyDown events
+    ''' </summary>
+    ''' <param name="sender">The object that sent the KeyDown event.</param>
+    ''' <param name="e">The object providing information about the KeyDown event.</param>
     Private Sub Form1_KeyDown(sender As Object, e As KeyEventArgs) Handles Me.KeyDown
         If e.KeyData = Keys.W Then
             kPut.w = True
