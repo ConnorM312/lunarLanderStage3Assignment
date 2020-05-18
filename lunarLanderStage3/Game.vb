@@ -21,6 +21,9 @@ Public Class Game
     Dim lStats As New landerStatistics
     Dim kPut As New keyInput
 
+    'debug
+    Dim gradient As Double = 0.0
+
     Private Sub Form1_Load(sender As Object, e As EventArgs) Handles MyBase.Load
         Timer1.Enabled = True
         stopWatch.Start()
@@ -140,6 +143,10 @@ Public Class Game
 
     'render loop
     Private Sub mainGameLoop(ByVal sender As Object, ByVal e As PaintEventArgs) Handles MyBase.Paint
+
+        lStats.realPosition.X = lStats.position.X + 10
+        lStats.realPosition.Y = lStats.position.Y + 17
+
         Dim whitePen As New Pen(Color.White, 3)
         Dim flamePen As New Pen(Color.FromArgb(168, 5, 5), 3)
 
@@ -206,6 +213,28 @@ Public Class Game
         lStats.velocity += lStats.acceleration
         lStats.position += lStats.velocity
 
+
+        'debug stuff, only needs to run checkwin
+        Dim retArr As Point() = checkWin()
+        Dim debugLoc As New Point(retArr(0).X, 20)
+        e.Graphics.DrawLine(flamePen, retArr(0), debugLoc)
+        debugLoc = New Point(retArr(1).X, 20)
+        e.Graphics.DrawLine(flamePen, retArr(1), debugLoc)
+        debugLoc = New Point(Me.Width, retArr(2).Y)
+        e.Graphics.DrawLine(flamePen, retArr(2), debugLoc)
+        e.Graphics.DrawLine(flamePen, lStats.realPosition.X, lStats.realPosition.Y, Me.Width, lStats.realPosition.Y)
+
+        'x2 = x1 + cos(angle) * length
+        'y2 = y1 + sin(angle) * length
+        Dim endPoint As New Point(retArr(0).X + Math.Cos((Math.PI / 180.0) * gradient) * 150, retArr(0).Y + Math.Sin((Math.PI / 180.0) * gradient) * 150)
+        e.Graphics.DrawLine(flamePen, retArr(0), endPoint)
+
+        Console.WriteLine("endPoint: (" & endPoint.X & "," & endPoint.Y)
+
+
+
+
+        'rotates the entire graphics rendering around an axis, after the e.Graphics.Transform = myMatrix
         Dim centerOfRotation As New Point(lStats.position.X + 10, lStats.position.Y + 17)
         'do the rotation matrix (currently only a demo)
         Dim myMatrix As New Matrix
@@ -215,11 +244,7 @@ Public Class Game
         Dim landerLinesPosition As New Point(lStats.position.X, lStats.position.Y)
         drawLander(landerLinesPosition, whitePen, flamePen, e)
 
-        'debug stuff, only needs to run checkwin
-        e.Graphics.DrawLine(checkWin(0), checkWin(0).X, checkWin(0).Y + 100)
         checkWin()
-
-
         CheckFrameRate()
 
     End Sub
@@ -352,7 +377,7 @@ Public Class Game
         'Console.WriteLine("The framerate is: " & frameRate & " Total frames are: " & frameCounter)
     End Sub
 
-    Private Function checkWin() As (Point, Point, Point)
+    Private Function checkWin() As Point()
         If (lStats.position.Y + 40) >= Me.Height And lStats.velocity.Y * 30 < 5 And Math.Abs(lStats.velocity.X * 30) < 5 Then
             'successfull landing
             lStats.velocity.X = 0
@@ -367,32 +392,54 @@ Public Class Game
             Me.Close()
         End If
 
+
+
+
         'actual implmentation:
         'find closest point above, and below
         Dim closestLeft As New Point(0, 0)
         Dim closestRight As New Point(0, 0)
         For x As Integer = 0 To terrainCollider.Length - 2
-            If lStats.position.X > closestLeft.X Then
+            If lStats.realPosition.X >= closestRight.X Then
                 closestLeft = terrainCollider(x)
                 closestRight = terrainCollider(x + 1)
             End If
         Next
         Console.WriteLine("left: " & closestLeft.X)
 
+        'Terrain Collision mk.1
         'create a triangle from closestLeft to lstats.position
-        Dim baseLength As Integer = lStats.position.X - closestLeft.X
-        '                                               opposite                     adjacent    
-        Dim collisAngle As Double = Math.Atan((closestRight.Y - closestLeft.Y) / (closestRight.X - closestLeft.X))
-        'clean up maths: (factor out tan)
-        Dim collisHeight As Integer = (Math.Tan(collisAngle) * baseLength) + closestLeft.Y
-        Console.WriteLine("collision height: " & collisHeight)
-        If lStats.position.Y >= collisHeight Then
-            Me.Close()
-        End If
+        'Dim baseLength As Integer = lStats.position.X - closestLeft.X
+        ''                                               opposite                     adjacent    
+        'Dim collisAngle As Double = Math.Atan((closestLeft.Y - closestRight.Y) / (closestLeft.X - closestRight.X))
+        ''clean up maths: (factor out tan)
+        'Dim collisHeight As Integer = (Math.Tan(collisAngle) * baseLength - Math.PI) + closestLeft.Y
+        'Console.WriteLine("collision height: " & collisHeight)
+        'If lStats.position.Y >= collisHeight Then
+        '    Me.Close()
+        'End If
 
-        Dim imPoint As New Point(0, collisHeight)
-        Dim retArr(2) As Point
-        retArr = (closestLeft, closestRight, imPoint)
+        'Terrain Collision mk.2-3 (mathematical graphing: https://www.desmos.com/calculator/cizpv1b4bb)
+        'revised method of collision detection (function out?)
+        'STEP 1: find gradient between the two points -> irregardless of which is higher
+        closestLeft.Y = closestLeft.Y
+        closestRight.Y = closestRight.Y
+        gradient = (closestRight.Y - closestLeft.Y) / (closestRight.X - closestLeft.X)
+        'STEP 2: Find the y-value of the line given by equation: y = gradient( lstats.Position.X - closestLeft.X) + closestLeft.Y
+        Dim collisionHeight As Integer = gradient * (CDbl(lStats.realPosition.X) - CDbl(closestLeft.X)) + CDbl(closestLeft.Y)
+        'STEP 3: compare:
+        Console.WriteLine("Collision Height: " & collisionHeight)
+        'If lStats.position.Y < collisionHeight Then
+        '    Me.Close()
+        'End If
+
+
+
+
+
+        'debugging stuff
+        Dim imPoint As New Point(0, collisionHeight)
+        Dim retArr As Point() = {closestLeft, closestRight, imPoint}
         Return retArr
     End Function
 

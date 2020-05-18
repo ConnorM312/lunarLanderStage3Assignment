@@ -19,6 +19,7 @@
 
     Public Class landerStatistics
         Public position As Vector
+        Public realPosition As Vector
         Public angle As Double
         Public velocity As Vector
         Public acceleration As Vector
