@@ -215,12 +215,16 @@ Public Class Game
         Dim landerLinesPosition As New Point(lStats.position.X, lStats.position.Y)
         drawLander(landerLinesPosition, whitePen, flamePen, e)
 
+        'debug stuff, only needs to run checkwin
+        e.Graphics.DrawLine(checkWin(0), checkWin(0).X, checkWin(0).Y + 100)
         checkWin()
 
+
         CheckFrameRate()
+
     End Sub
 
-    Private Function terrainStarter(sideSize As Integer, random As System.Random)
+    Private Function terrainStarter(sideSize As Integer, random As System.Random) As Model.TerrainMap
         Dim initData(sideSize, sideSize) As Integer
         Dim terrainMap As New TerrainMap(initData)
 
@@ -348,7 +352,7 @@ Public Class Game
         'Console.WriteLine("The framerate is: " & frameRate & " Total frames are: " & frameCounter)
     End Sub
 
-    Private Sub checkWin()
+    Private Function checkWin() As (Point, Point, Point)
         If (lStats.position.Y + 40) >= Me.Height And lStats.velocity.Y * 30 < 5 And Math.Abs(lStats.velocity.X * 30) < 5 Then
             'successfull landing
             lStats.velocity.X = 0
@@ -386,7 +390,11 @@ Public Class Game
             Me.Close()
         End If
 
-    End Sub
+        Dim imPoint As New Point(0, collisHeight)
+        Dim retArr(2) As Point
+        retArr = (closestLeft, closestRight, imPoint)
+        Return retArr
+    End Function
 
     'catch keyboard input
     ''' <summary>
