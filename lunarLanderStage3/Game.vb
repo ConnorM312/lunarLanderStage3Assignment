@@ -1,12 +1,4 @@
-﻿'Model, view, controller
-'Model:
-'    Describes all data, e.g. position of lander, terrainmap etc.
-'View:
-'   How things are displayed. UI, drawing to screen, drawing text etc.
-'Controller:
-'   Bridge between, manipulates the model.
-
-'Game.vb = view + controller
+﻿'Game.vb = view + controller
 Imports System.Drawing.Drawing2D
 
 Public Class Game
@@ -15,81 +7,110 @@ Public Class Game
     Dim frameRate As Double = 64
     Dim frameCounter As Integer
 
+    Dim gradient As Double = 0.0
+
     Dim terrainSlice(0) As Point
     Dim terrainCollider(0) As Point
 
     Dim lStats As New landerStatistics
     Dim kPut As New keyInput
 
-    'debug
-    Dim gradient As Double = 0.0
-
+    'load
     Private Sub Form1_Load(sender As Object, e As EventArgs) Handles MyBase.Load
-        Timer1.Enabled = True
-        stopWatch.Start()
 
-        'define gravity etc...
-        lStats.gravity.Y = 0.006
-        lStats.gravity.X = 0
+        'set default values
+        setDefaults()
 
-        lStats.thrust.X = 0
-        lStats.thrust.Y = 0.017
+        generateTerrain()
 
-        lStats.thrustConst = 0.017
-
-        lStats.position.X = 100
-        lStats.position.Y = 100
+    End Sub
 
 
-        lStats.velocity.X = 0
-        lStats.velocity.Y = 0
 
-        lStats.acceleration.X = 0
-        lStats.acceleration.Y = 0
+    Private Sub Timer1_Tick(sender As Object, e As EventArgs) Handles Timer1.Tick
+        Invalidate()
+    End Sub
 
-        lStats.angle = 270
-        lStats.fuel = 2000
 
-        Randomize()
+    'main game loop
+    Private Sub mainGameLoop(ByVal sender As Object, ByVal e As PaintEventArgs) Handles MyBase.Paint
+        Dim whitePen As New Pen(Color.White, 3)
+        Dim flamePen As New Pen(Color.FromArgb(168, 5, 5), 3)
+        Dim debugPen As New Pen(Color.FromArgb(255, 0, 255), 3)
 
-        'generate terrain into array of points?
-        'can use:
-        '       midpoint dispacement noise 
+        'set centre position from the top left of the lander.
+        lStats.realPosition.X = lStats.position.X + 10
+        lStats.realPosition.Y = lStats.position.Y + 17
+
+        'increment frameCounter to facilitate measurement of performance
+        frameCounter += 1
+
+
+        drawTerrain(whitePen, e)
+
+        updateLabels()
+
+        applyRotationalEffects()
+
+
+        'apply acceleration of thruster or gravity depending on user input
+        applyAccelerationGravityFromUserInput()
+
+
+        'debugging lines on screen, also functions as a HUD to make things easier
+        debugHUD(debugPen, e)
+
+
+        'rotates the graphics rendered after this point -lander
+        rotateMatrix(e)
+
+
+        drawLander(whitePen, flamePen, e)
+
+        evaluateGameState()
+
+        CheckFrameRate()
+
+    End Sub
+
+    Private Sub generateTerrain()
+        'generate terrain into array of points using
+        '       midpoint dispacement noise (Diamond-Square algorithm)
         '       https://en.wikipedia.org/wiki/Diamond-square_algorithm#Midpoint_displacement_algorithm
 
         'Max recursion depth = 11, assuming that 1920 is the total side value of heightmap
         'I found that:
+        'The relationship between recursion depth and side length of the 3d heightmap array is logarithmic, given by this equation:
         'https://www.desmos.com/calculator/eie2mmuwzz
-        'Add to report, visual basic does not support tail-recursion, therefore, infinite recursion is not possible, because the stack will be blown.
+        'NOTE: Since visual basic does not support tail-recursion, infinite recursion is impossible, because the stack will be blown -no infinite load times.
 
-        'the length of the side of the square (0-4), maintaining 2^n + 1 form, however arrays are from 0 to value, not 1...
+        'the length of the side of the square, maintaining 2^n + 1 form, however arrays are from 0 to value, not 1, hence the + 1 is unnecessary
         Dim n As Integer = 6
         Dim sideSize As Integer = 2 ^ n
         Dim random As System.Random = New System.Random()
+        'initialise array as a terrainMap, with correct characteristics -custom type to facilitate unique operations.
         Dim rTerrainMap As TerrainMap = terrainStarter(sideSize, random)
-        ReDim terrainSlice(sideSize)
+
 
         sideSize /= 2
-        'Note: middleIndex is the diamond in the diamond step, and therefore, the square step values are surrounding it (the centre), in a clockwise fashion
         Dim middleIndex As New Point(sideSize, sideSize)
 
+        'runs the diamond-square algorithm
+        recursiveTerrainAlgorithm(rTerrainMap, random, middleIndex, sideSize)
 
-        'debugging
         Dim maxY As Integer = 50
         Dim minY As Integer = Me.Height - 50
-
-        'Note: sideSize is NOW the distance from the middleIndex to the edge of the square which is being constructed.
-        recursiveTerrainAlgorithm(rTerrainMap, random, middleIndex, sideSize)
+        ReDim terrainSlice(sideSize)
 
 
         'converts the 3d heightmap to 2d:
-        'also adds the flat sections
+        'also adds the flat sections, and gets 
         For x As Integer = 0 To terrainSlice.GetLength(0) - 1
             Dim y As Integer = terrainSlice.GetLength(0) / 2
             'Regulate y magnitude, to keep it on the screen
 
 
-            'diagnostics and parameter setting
+            'finds highest and lowest points, -usefull later
             If rTerrainMap.GetValue(x, y) < maxY Then
                 maxY = rTerrainMap.GetValue(x, y)
             ElseIf rTerrainMap.GetValue(x, y) > minY Then
@@ -99,7 +120,7 @@ Public Class Game
             'sliced
             terrainSlice(x).Y = rTerrainMap.GetValue(x, y)
 
-            'set flat sections: UNSPAGHETTI, and actually randomize
+            'set flat sections:
             Dim length As Integer = Int((5 * Rnd()) + 1)
 
             If x > length + 1 And Int((7 * Rnd()) + 1) > 6 Then
@@ -109,11 +130,11 @@ Public Class Game
             End If
         Next
 
-        Console.WriteLine("maxY = " & maxY)
 
-        'THis code ensures that the terrain conforms to the desired heights and depths
+
+        'This code ensures that the terrain conforms to the desired heights and depths
         'It ensures that load times are always the same, with no INFINITE load times. - allows very high heightmap resolution.
-        'normalise to zero
+        'normalise to zero:
         Dim normaliseAmount As Integer = -maxY
         'scale, probably make this a function
         Dim scaleFactor As Double = CDbl(Me.Height - 100) / (minY - maxY)
@@ -124,6 +145,8 @@ Public Class Game
             'reshift down
             terrainSlice(x).Y += 50
         Next
+
+
 
         'can also flip terrain upside down if neccessary - provides clearance for start
         Dim xCoordOfStart As Integer = lStats.position.X / (Me.Width / terrainSlice.GetLength(0))
@@ -137,117 +160,8 @@ Public Class Game
 
     End Sub
 
-    Private Sub Timer1_Tick(sender As Object, e As EventArgs) Handles Timer1.Tick
-        Invalidate()
-    End Sub
-
-    'render loop
-    Private Sub mainGameLoop(ByVal sender As Object, ByVal e As PaintEventArgs) Handles MyBase.Paint
-
-        lStats.realPosition.X = lStats.position.X + 10
-        lStats.realPosition.Y = lStats.position.Y + 17
-
-        Dim whitePen As New Pen(Color.White, 3)
-        Dim flamePen As New Pen(Color.FromArgb(168, 5, 5), 3)
-
-        'draw terrain:
-        Dim offset As Integer = Me.Width / terrainSlice.GetLength(0)
-        ReDim Preserve terrainCollider(terrainSlice.Length - 1)
-
-        For i As Integer = 0 To terrainSlice.Length() - 2 Step 1
-
-            'need to store this info for collision detection later
-
-            Dim offsetPoint As New Point(offset * (i), terrainSlice(i).Y)
-            Dim newOffsetPoint As New Point(offset * (i + 1), terrainSlice(i + 1).Y)
-            terrainCollider(i) = offsetPoint
-            terrainCollider(i + 1) = newOffsetPoint
-            e.Graphics.DrawLine(whitePen, offsetPoint, newOffsetPoint)
-
-        Next
 
 
-        frameCounter += 1
-
-        'alter the velocity to seem more speedy and display it
-        Label1.Text = "VERTICAL VELOCITY: " & CInt(lStats.velocity.Y * 30)
-        Label2.Text = "HORIZONTAL VELOCITY " & CInt(lStats.velocity.X * 30)
-
-        'Console.WriteLine("angle:" & lStats.angle)
-
-        'rotate lander based on user input
-        If kPut.a = True And lStats.angle - 1 >= 180 Then
-            lStats.angle -= 1
-        ElseIf kPut.d = True And lStats.angle + 1 <= 360 Then
-            lStats.angle += 1
-        End If
-
-        lStats.thrust.X = Math.Cos(Math.PI / 180 * (lStats.angle)) * lStats.thrustConst
-        lStats.thrust.Y = Math.Sin(Math.PI / 180 * (lStats.angle)) * lStats.thrustConst
-
-        'apply acceleration of thruster or gravity depending on user input
-        If kPut.space = True And lStats.fuel > 0 Then
-            lStats.angle = 270
-            'double thrust for emergency escape
-            lStats.acceleration = lStats.gravity + lStats.thrust + lStats.thrust
-            If lStats.fuel - 4 > 0 Then
-                lStats.fuel -= 4
-            Else
-                lStats.fuel = 0
-            End If
-            Label6.Text = "FUEL:  " & CInt(lStats.fuel)
-        ElseIf kPut.w = True And lStats.fuel > 0 Then
-            'total acceleration is the acceleration from gravity + the acceleration from thrusters
-            lStats.acceleration = lStats.gravity + lStats.thrust
-            'lStats.fuel = max(0, lStats.fuel - 0.25)
-            If lStats.fuel - 0.25 > 0 Then
-                lStats.fuel -= 0.25
-            Else
-                lStats.fuel = 0
-            End If
-            Label6.Text = "FUEL:  " & CInt(lStats.fuel)
-        Else
-            lStats.acceleration = lStats.gravity
-        End If
-
-        lStats.velocity += lStats.acceleration
-        lStats.position += lStats.velocity
-
-
-        'debug stuff, only needs to run checkwin
-        Dim retArr As Point() = checkWin()
-        Dim debugLoc As New Point(retArr(0).X, 20)
-        e.Graphics.DrawLine(flamePen, retArr(0), debugLoc)
-        debugLoc = New Point(retArr(1).X, 20)
-        e.Graphics.DrawLine(flamePen, retArr(1), debugLoc)
-        debugLoc = New Point(Me.Width, retArr(2).Y)
-        e.Graphics.DrawLine(flamePen, retArr(2), debugLoc)
-        e.Graphics.DrawLine(flamePen, lStats.realPosition.X, lStats.realPosition.Y, Me.Width, lStats.realPosition.Y)
-
-        'x2 = x1 + cos(angle) * length
-        'y2 = y1 + sin(angle) * length
-        Dim endPoint As New Point(retArr(0).X + Math.Cos((Math.PI / 180.0) * gradient) * 150, retArr(0).Y + Math.Sin((Math.PI / 180.0) * gradient) * 150)
-        e.Graphics.DrawLine(flamePen, retArr(0), endPoint)
-
-        Console.WriteLine("endPoint: (" & endPoint.X & "," & endPoint.Y)
-
-
-
-
-        'rotates the entire graphics rendering around an axis, after the e.Graphics.Transform = myMatrix
-        Dim centerOfRotation As New Point(lStats.position.X + 10, lStats.position.Y + 17)
-        'do the rotation matrix (currently only a demo)
-        Dim myMatrix As New Matrix
-        myMatrix.RotateAt(lStats.angle + 90, centerOfRotation)
-        e.Graphics.Transform = myMatrix
-
-        Dim landerLinesPosition As New Point(lStats.position.X, lStats.position.Y)
-        drawLander(landerLinesPosition, whitePen, flamePen, e)
-
-        checkWin()
-        CheckFrameRate()
-
-    End Sub
 
     Private Function terrainStarter(sideSize As Integer, random As System.Random) As Model.TerrainMap
         Dim initData(sideSize, sideSize) As Integer
@@ -262,8 +176,8 @@ Public Class Game
         Return terrainMap
     End Function
 
-    'add to model
-    'decrease randomness every recursion
+
+
     Private Sub recursiveTerrainAlgorithm(rTerrainMap As TerrainMap, random As System.Random, middleIndex As Point, size As Integer)
         'diamond step:
         Dim randomMagnitude As Integer = 50
@@ -315,7 +229,120 @@ Public Class Game
 
     End Sub
 
-    Private Sub drawLander(landerLinesPosition As Point, whitePen As Pen, flamePen As Pen, e As PaintEventArgs)
+
+
+    Private Sub drawTerrain(whitePen As Pen, e As PaintEventArgs)
+        'draw terrain:
+        Dim offset As Integer = Me.Width / terrainSlice.GetLength(0)
+        ReDim Preserve terrainCollider(terrainSlice.Length - 1)
+
+        For i As Integer = 0 To terrainSlice.Length() - 2 Step 1
+
+            'need to store this info for collision detection later
+
+            Dim offsetPoint As New Point(offset * (i), terrainSlice(i).Y)
+            Dim newOffsetPoint As New Point(offset * (i + 1), terrainSlice(i + 1).Y)
+            terrainCollider(i) = offsetPoint
+            terrainCollider(i + 1) = newOffsetPoint
+            e.Graphics.DrawLine(whitePen, offsetPoint, newOffsetPoint)
+
+        Next
+    End Sub
+
+
+
+    Private Sub updateLabels()
+        'alter the velocity to seem more speedy and display it
+        VerticalLabel.Text = "VERTICAL VELOCITY: " & CInt(lStats.velocity.Y * 30)
+        HorizontalLabel.Text = "HORIZONTAL VELOCITY " & CInt(lStats.velocity.X * 30)
+        AltitudeLabel.Text = "ALTITUDE " & CInt(checkTerrainHeight(2).Y - lStats.realPosition.Y)
+        ScoreLabel.Text = "IDK"
+        TimeLabel.Text = "TIME:  " & CInt(stopWatch.Elapsed.TotalSeconds)
+        FuelLabel.Text = "FUEL:  " & CInt(lStats.fuel)
+    End Sub
+
+
+
+    Private Sub applyRotationalEffects()
+        'rotate lander based on user input
+        If kPut.a = True And lStats.angle - 1 >= 180 Then
+            lStats.angle -= 1
+        ElseIf kPut.d = True And lStats.angle + 1 <= 360 Then
+            lStats.angle += 1
+        End If
+
+        'adjust raw thrust values on x and y axis based on current angular orientation
+        '   -sideways angle = X thrust becomes bigger, Y thrust smaller
+        lStats.thrust.X = Math.Cos(Math.PI / 180 * (lStats.angle)) * lStats.thrustConst
+        lStats.thrust.Y = Math.Sin(Math.PI / 180 * (lStats.angle)) * lStats.thrustConst
+    End Sub
+
+
+
+    Private Sub applyAccelerationGravityFromUserInput()
+        'apply acceleration of thruster or gravity depending on user input
+        If kPut.space And lStats.fuel > 0 Then
+            lStats.angle = 270
+            'double thrust for emergency escape
+            lStats.acceleration = lStats.gravity + lStats.thrust + lStats.thrust
+            If lStats.fuel - 4 > 0 Then
+                lStats.fuel -= 4
+            Else
+                lStats.fuel = 0
+            End If
+
+        ElseIf kPut.w And lStats.fuel > 0 Then
+            'total acceleration is the acceleration from gravity + the acceleration from thrusters
+            lStats.acceleration = lStats.gravity + lStats.thrust
+            'lStats.fuel = max(0, lStats.fuel - 0.25)
+            If lStats.fuel - 0.25 > 0 Then
+                lStats.fuel -= 0.25
+            Else
+                lStats.fuel = 0
+            End If
+        ElseIf Not lStats.landed Then
+            lStats.acceleration = lStats.gravity
+        End If
+
+        'perform the summing of vectors, hence updating position
+        lStats.velocity += lStats.acceleration
+        lStats.position += lStats.velocity
+    End Sub
+
+
+    Private Sub debugHUD(debugPen As Pen, e As PaintEventArgs)
+        'debug stuff
+        Dim retArr As Point() = checkTerrainHeight()
+        Dim debugLoc As New Point(retArr(0).X, 20)
+        e.Graphics.DrawLine(debugPen, retArr(0), debugLoc)
+        debugLoc = New Point(retArr(1).X, 20)
+        e.Graphics.DrawLine(debugPen, retArr(1), debugLoc)
+        debugLoc = New Point(Me.Width, retArr(2).Y)
+        e.Graphics.DrawLine(debugPen, retArr(2), debugLoc)
+        e.Graphics.DrawLine(debugPen, lStats.realPosition.X, lStats.realPosition.Y, Me.Width, lStats.realPosition.Y)
+
+        'gradient drawing for debugging
+        Dim endPoint As New Point(retArr(0).X + Math.Cos((Math.PI / 180.0) * gradient) * 150, retArr(0).Y + Math.Sin((Math.PI / 180.0) * gradient) * 150)
+        e.Graphics.DrawLine(debugPen, retArr(0), endPoint)
+        'Console.WriteLine("endPoint: (" & endPoint.X & "," & endPoint.Y)
+    End Sub
+
+
+    Private Sub evaluateGameState()
+        If lStats.realPosition.Y + 25 >= checkTerrainHeight(2).Y Then
+            'check collision has occured
+            If Not landing() Then
+                Me.Close()
+            End If
+        Else
+            lStats.landed = False
+        End If
+    End Sub
+
+
+    Private Sub drawLander(whitePen As Pen, flamePen As Pen, e As PaintEventArgs)
+        Dim landerLinesPosition As New Point(lStats.position.X, lStats.position.Y)
+
         'lander body
         Dim landerSize As New SizeF(20, 20)
         Dim landerRect As New RectangleF(landerLinesPosition, landerSize)
@@ -345,6 +372,7 @@ Public Class Game
         'draw the thruster cone
         e.Graphics.DrawLine(whitePen, leftThrusterPointS, leftThrusterPointE)
         e.Graphics.DrawLine(whitePen, rightThrusterPointS, rightThrusterPointE)
+
         'draw thruster arc
         'e.Graphics.DrawArc(whitePen, leftThrusterPointE, 20, 20)
         e.Graphics.DrawLine(whitePen, leftThrusterPointE, rightThrusterPointE)
@@ -356,6 +384,7 @@ Public Class Game
 
             e.Graphics.DrawLine(flamePen, leftFlameS, endFlame)
             e.Graphics.DrawLine(flamePen, rightFlameS, endFlame)
+
         ElseIf kPut.w = True And lStats.fuel > 0 Then
             'draw the flame
             Dim leftFlameS As New Point(leftPoint.X + 4, leftPoint.Y + 20)
@@ -367,36 +396,59 @@ Public Class Game
         End If
     End Sub
 
-    'EDIT SO NOT COPY FROM OLD CODE
+
     Dim stopWatch As New Stopwatch()
+
 
     Private Sub CheckFrameRate()
         frameRate = frameCounter / stopWatch.Elapsed.TotalSeconds
-        Label5.Text = "TIME:  " & CInt(stopWatch.Elapsed.TotalSeconds)
         'displays framerate live, facilitating adjustment of timing parameters if the user wishes to troubleshoot
-        'Console.WriteLine("The framerate is: " & frameRate & " Total frames are: " & frameCounter)
+        Console.WriteLine("The framerate is: " & frameRate & " Total frames are: " & frameCounter)
     End Sub
 
-    Private Function checkWin() As Point()
-        If (lStats.position.Y + 40) >= Me.Height And lStats.velocity.Y * 30 < 5 And Math.Abs(lStats.velocity.X * 30) < 5 Then
-            'successfull landing
+
+    Private Function landing()
+        'hitboxes are the lowest possible points, -at all time these are the lander legs' feet
+
+        'What does that mean?
+        'The distance from the foot to the center of the lander on the y-axis and x-axis are roughly equivalent
+        'Because there is 2 feet, and restricted rotation, there will always be a foot to hit first - before lander chassis
+        'Hence, -an abstraction of 25 pixels from the center of the lander will estimate collision detection.
+        '-this is because of a similarity in the y axis distance irregardless of rotation.
+
+        'speed (in user scale) is less than 16 on x and y axis.
+        Dim validSpeed As Boolean = Math.Abs(lStats.velocity.X) * 30 < 16 And Math.Abs(lStats.velocity.Y) * 30 < 16
+        Console.WriteLine("velocity X = " & CInt(Math.Abs(lStats.velocity.X) * 30) & " velocity Y = " & CInt(Math.Abs(lStats.velocity.Y) * 30) & " speed is: " & validSpeed)
+        'angle +- 5 degrees to the vertical
+        Dim validAngle As Boolean = lStats.angle > 255 And lStats.angle < 280
+        Console.WriteLine("angle = " & lStats.angle & " angle is: " & validAngle)
+
+        If validSpeed And validAngle Then
+            'valid landing has occured, freeze the lander
             lStats.velocity.X = 0
             lStats.velocity.Y = 0
-            'lStats.acceleration.X = 0
-            lStats.acceleration.Y = 0
-            lStats.gravity.Y = 0
-            'lStats.thrust.Y = 0
-            'lStats.thrust.X = 0
-        ElseIf (lStats.position.Y + 40) >= Me.Height Then
-            'failed landing
-            Me.Close()
+            lStats.angle = 270
+            lStats.landed = True
+            Return True
+        Else
+            'crash has occured
+            Return False
         End If
+    End Function
 
 
+    Private Sub rotateMatrix(e As PaintEventArgs)
+        'rotates the entire graphics rendering around an axis, after the e.Graphics.Transform = myMatrix
+        Dim centerOfRotation As New Point(lStats.position.X + 10, lStats.position.Y + 17)
+        'do the rotation matrix (currently only a demo)
+        Dim myMatrix As New Matrix
+        myMatrix.RotateAt(lStats.angle + 90, centerOfRotation)
+        e.Graphics.Transform = myMatrix
+    End Sub
 
 
-        'actual implmentation:
-        'find closest point above, and below
+    Private Function checkTerrainHeight() As Point()
+        'find closest points in terrain on left and right of lander
         Dim closestLeft As New Point(0, 0)
         Dim closestRight As New Point(0, 0)
         For x As Integer = 0 To terrainCollider.Length - 2
@@ -405,43 +457,28 @@ Public Class Game
                 closestRight = terrainCollider(x + 1)
             End If
         Next
-        Console.WriteLine("left: " & closestLeft.X)
-
-        'Terrain Collision mk.1
-        'create a triangle from closestLeft to lstats.position
-        'Dim baseLength As Integer = lStats.position.X - closestLeft.X
-        ''                                               opposite                     adjacent    
-        'Dim collisAngle As Double = Math.Atan((closestLeft.Y - closestRight.Y) / (closestLeft.X - closestRight.X))
-        ''clean up maths: (factor out tan)
-        'Dim collisHeight As Integer = (Math.Tan(collisAngle) * baseLength - Math.PI) + closestLeft.Y
-        'Console.WriteLine("collision height: " & collisHeight)
-        'If lStats.position.Y >= collisHeight Then
-        '    Me.Close()
-        'End If
 
         'Terrain Collision mk.2-3 (mathematical graphing: https://www.desmos.com/calculator/cizpv1b4bb)
-        'revised method of collision detection (function out?)
+
         'STEP 1: find gradient between the two points -> irregardless of which is higher
-        closestLeft.Y = closestLeft.Y
-        closestRight.Y = closestRight.Y
-        gradient = (closestRight.Y - closestLeft.Y) / (closestRight.X - closestLeft.X)
+        'prevent NaN gradient (divide by 0) and subsequent overflow:
+        If lStats.realPosition.X <= 0 Then
+            gradient = 0
+        Else
+            gradient = (closestRight.Y - closestLeft.Y) / (closestRight.X - closestLeft.X)
+        End If
+
         'STEP 2: Find the y-value of the line given by equation: y = gradient( lstats.Position.X - closestLeft.X) + closestLeft.Y
         Dim collisionHeight As Integer = gradient * (CDbl(lStats.realPosition.X) - CDbl(closestLeft.X)) + CDbl(closestLeft.Y)
         'STEP 3: compare:
-        Console.WriteLine("Collision Height: " & collisionHeight)
-        'If lStats.position.Y < collisionHeight Then
-        '    Me.Close()
-        'End If
+        '   -not in this function
 
-
-
-
-
-        'debugging stuff
-        Dim imPoint As New Point(0, collisionHeight)
+        'return the collision height as a point
+        Dim imPoint As New Point(lStats.realPosition.X, collisionHeight)
         Dim retArr As Point() = {closestLeft, closestRight, imPoint}
         Return retArr
     End Function
+
 
     'catch keyboard input
     ''' <summary>
@@ -475,6 +512,35 @@ Public Class Game
         ElseIf e.KeyData = Keys.Space Then
             kPut.space = False
         End If
+    End Sub
+
+    Private Sub setDefaults()
+        Timer1.Enabled = True
+        stopWatch.Start()
+
+        'define gravity etc...
+        lStats.gravity.Y = 0.006
+        lStats.gravity.X = 0
+
+        lStats.thrust.X = 0
+        lStats.thrust.Y = 0.017
+
+        lStats.thrustConst = 0.017
+
+        lStats.position.X = 100
+        lStats.position.Y = 100
+
+
+        lStats.velocity.X = 0
+        lStats.velocity.Y = 0
+
+        lStats.acceleration.X = 0
+        lStats.acceleration.Y = 0
+
+        lStats.angle = 270
+        lStats.fuel = 2000
+
+        Randomize()
     End Sub
 
 End Class

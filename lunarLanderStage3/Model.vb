@@ -27,6 +27,7 @@
         Public thrust As Vector
         Public thrustConst As Double
         Public fuel As Double
+        Public landed As Boolean
     End Class
 
     Public Class TerrainMap

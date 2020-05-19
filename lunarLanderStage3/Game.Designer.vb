@@ -24,108 +24,108 @@ Partial Class Game
     Private Sub InitializeComponent()
         Me.components = New System.ComponentModel.Container()
         Me.Timer1 = New System.Windows.Forms.Timer(Me.components)
-        Me.Label1 = New System.Windows.Forms.Label()
-        Me.Label2 = New System.Windows.Forms.Label()
-        Me.Label3 = New System.Windows.Forms.Label()
-        Me.Label4 = New System.Windows.Forms.Label()
-        Me.Label5 = New System.Windows.Forms.Label()
-        Me.Label6 = New System.Windows.Forms.Label()
+        Me.VerticalLabel = New System.Windows.Forms.Label()
+        Me.HorizontalLabel = New System.Windows.Forms.Label()
+        Me.AltitudeLabel = New System.Windows.Forms.Label()
+        Me.ScoreLabel = New System.Windows.Forms.Label()
+        Me.TimeLabel = New System.Windows.Forms.Label()
+        Me.FuelLabel = New System.Windows.Forms.Label()
         Me.SuspendLayout()
         '
         'Timer1
         '
         Me.Timer1.Interval = 1
         '
-        'Label1
+        'VerticalLabel
         '
-        Me.Label1.AutoSize = True
-        Me.Label1.Font = New System.Drawing.Font("Courier New", 15.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.Label1.ForeColor = System.Drawing.Color.White
-        Me.Label1.Location = New System.Drawing.Point(1299, 71)
-        Me.Label1.Margin = New System.Windows.Forms.Padding(2, 0, 2, 0)
-        Me.Label1.Name = "Label1"
-        Me.Label1.Size = New System.Drawing.Size(250, 22)
-        Me.Label1.TabIndex = 0
-        Me.Label1.Text = "VERTICAL VELOCITY: 0"
+        Me.VerticalLabel.AutoSize = True
+        Me.VerticalLabel.Font = New System.Drawing.Font("Courier New", 15.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.VerticalLabel.ForeColor = System.Drawing.Color.White
+        Me.VerticalLabel.Location = New System.Drawing.Point(1299, 71)
+        Me.VerticalLabel.Margin = New System.Windows.Forms.Padding(2, 0, 2, 0)
+        Me.VerticalLabel.Name = "VerticalLabel"
+        Me.VerticalLabel.Size = New System.Drawing.Size(250, 22)
+        Me.VerticalLabel.TabIndex = 0
+        Me.VerticalLabel.Text = "VERTICAL VELOCITY: 0"
         '
-        'Label2
+        'HorizontalLabel
         '
-        Me.Label2.AutoSize = True
-        Me.Label2.Font = New System.Drawing.Font("Courier New", 15.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.Label2.ForeColor = System.Drawing.Color.White
-        Me.Label2.Location = New System.Drawing.Point(1299, 38)
-        Me.Label2.Margin = New System.Windows.Forms.Padding(2, 0, 2, 0)
-        Me.Label2.Name = "Label2"
-        Me.Label2.Size = New System.Drawing.Size(274, 22)
-        Me.Label2.TabIndex = 1
-        Me.Label2.Text = "HORIZONTAL VELOCITY: 0"
+        Me.HorizontalLabel.AutoSize = True
+        Me.HorizontalLabel.Font = New System.Drawing.Font("Courier New", 15.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.HorizontalLabel.ForeColor = System.Drawing.Color.White
+        Me.HorizontalLabel.Location = New System.Drawing.Point(1299, 38)
+        Me.HorizontalLabel.Margin = New System.Windows.Forms.Padding(2, 0, 2, 0)
+        Me.HorizontalLabel.Name = "HorizontalLabel"
+        Me.HorizontalLabel.Size = New System.Drawing.Size(274, 22)
+        Me.HorizontalLabel.TabIndex = 1
+        Me.HorizontalLabel.Text = "HORIZONTAL VELOCITY: 0"
         '
-        'Label3
+        'AltitudeLabel
         '
-        Me.Label3.AutoSize = True
-        Me.Label3.Font = New System.Drawing.Font("Courier New", 15.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.Label3.ForeColor = System.Drawing.Color.White
-        Me.Label3.Location = New System.Drawing.Point(1299, 6)
-        Me.Label3.Margin = New System.Windows.Forms.Padding(2, 0, 2, 0)
-        Me.Label3.Name = "Label3"
-        Me.Label3.Size = New System.Drawing.Size(142, 22)
-        Me.Label3.TabIndex = 2
-        Me.Label3.Text = "ALTITUDE: 0"
+        Me.AltitudeLabel.AutoSize = True
+        Me.AltitudeLabel.Font = New System.Drawing.Font("Courier New", 15.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.AltitudeLabel.ForeColor = System.Drawing.Color.White
+        Me.AltitudeLabel.Location = New System.Drawing.Point(1299, 6)
+        Me.AltitudeLabel.Margin = New System.Windows.Forms.Padding(2, 0, 2, 0)
+        Me.AltitudeLabel.Name = "AltitudeLabel"
+        Me.AltitudeLabel.Size = New System.Drawing.Size(142, 22)
+        Me.AltitudeLabel.TabIndex = 2
+        Me.AltitudeLabel.Text = "ALTITUDE: 0"
         '
-        'Label4
+        'ScoreLabel
         '
-        Me.Label4.AutoSize = True
-        Me.Label4.Font = New System.Drawing.Font("Courier New", 15.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.Label4.ForeColor = System.Drawing.Color.White
-        Me.Label4.Location = New System.Drawing.Point(8, 6)
-        Me.Label4.Margin = New System.Windows.Forms.Padding(2, 0, 2, 0)
-        Me.Label4.Name = "Label4"
-        Me.Label4.Size = New System.Drawing.Size(106, 22)
-        Me.Label4.TabIndex = 5
-        Me.Label4.Text = "SCORE: 0"
+        Me.ScoreLabel.AutoSize = True
+        Me.ScoreLabel.Font = New System.Drawing.Font("Courier New", 15.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.ScoreLabel.ForeColor = System.Drawing.Color.White
+        Me.ScoreLabel.Location = New System.Drawing.Point(8, 6)
+        Me.ScoreLabel.Margin = New System.Windows.Forms.Padding(2, 0, 2, 0)
+        Me.ScoreLabel.Name = "ScoreLabel"
+        Me.ScoreLabel.Size = New System.Drawing.Size(106, 22)
+        Me.ScoreLabel.TabIndex = 5
+        Me.ScoreLabel.Text = "SCORE: 0"
         '
-        'Label5
+        'TimeLabel
         '
-        Me.Label5.AutoSize = True
-        Me.Label5.Font = New System.Drawing.Font("Courier New", 15.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.Label5.ForeColor = System.Drawing.Color.White
-        Me.Label5.Location = New System.Drawing.Point(8, 38)
-        Me.Label5.Margin = New System.Windows.Forms.Padding(2, 0, 2, 0)
-        Me.Label5.Name = "Label5"
-        Me.Label5.Size = New System.Drawing.Size(106, 22)
-        Me.Label5.TabIndex = 4
-        Me.Label5.Text = "TIME:  0"
+        Me.TimeLabel.AutoSize = True
+        Me.TimeLabel.Font = New System.Drawing.Font("Courier New", 15.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.TimeLabel.ForeColor = System.Drawing.Color.White
+        Me.TimeLabel.Location = New System.Drawing.Point(8, 38)
+        Me.TimeLabel.Margin = New System.Windows.Forms.Padding(2, 0, 2, 0)
+        Me.TimeLabel.Name = "TimeLabel"
+        Me.TimeLabel.Size = New System.Drawing.Size(106, 22)
+        Me.TimeLabel.TabIndex = 4
+        Me.TimeLabel.Text = "TIME:  0"
         '
-        'Label6
+        'FuelLabel
         '
-        Me.Label6.AutoSize = True
-        Me.Label6.Font = New System.Drawing.Font("Courier New", 15.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.Label6.ForeColor = System.Drawing.Color.White
-        Me.Label6.Location = New System.Drawing.Point(8, 71)
-        Me.Label6.Margin = New System.Windows.Forms.Padding(2, 0, 2, 0)
-        Me.Label6.Name = "Label6"
-        Me.Label6.Size = New System.Drawing.Size(130, 22)
-        Me.Label6.TabIndex = 3
-        Me.Label6.Text = "FUEL:  500"
+        Me.FuelLabel.AutoSize = True
+        Me.FuelLabel.Font = New System.Drawing.Font("Courier New", 15.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.FuelLabel.ForeColor = System.Drawing.Color.White
+        Me.FuelLabel.Location = New System.Drawing.Point(8, 71)
+        Me.FuelLabel.Margin = New System.Windows.Forms.Padding(2, 0, 2, 0)
+        Me.FuelLabel.Name = "FuelLabel"
+        Me.FuelLabel.Size = New System.Drawing.Size(130, 22)
+        Me.FuelLabel.TabIndex = 3
+        Me.FuelLabel.Text = "FUEL:  500"
         '
-        'Form1
+        'Game
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.BackColor = System.Drawing.Color.Black
         Me.ClientSize = New System.Drawing.Size(1584, 861)
-        Me.Controls.Add(Me.Label4)
-        Me.Controls.Add(Me.Label5)
-        Me.Controls.Add(Me.Label6)
-        Me.Controls.Add(Me.Label3)
-        Me.Controls.Add(Me.Label2)
-        Me.Controls.Add(Me.Label1)
+        Me.Controls.Add(Me.ScoreLabel)
+        Me.Controls.Add(Me.TimeLabel)
+        Me.Controls.Add(Me.FuelLabel)
+        Me.Controls.Add(Me.AltitudeLabel)
+        Me.Controls.Add(Me.HorizontalLabel)
+        Me.Controls.Add(Me.VerticalLabel)
         Me.DoubleBuffered = True
         Me.Margin = New System.Windows.Forms.Padding(2)
         Me.MaximumSize = New System.Drawing.Size(1600, 900)
         Me.MinimizeBox = False
         Me.MinimumSize = New System.Drawing.Size(1600, 900)
-        Me.Name = "Form1"
+        Me.Name = "Game"
         Me.Text = "Form1"
         Me.ResumeLayout(False)
         Me.PerformLayout()
@@ -133,10 +133,10 @@ Partial Class Game
     End Sub
 
     Friend WithEvents Timer1 As Timer
-    Friend WithEvents Label1 As Label
-    Friend WithEvents Label2 As Label
-    Friend WithEvents Label3 As Label
-    Friend WithEvents Label4 As Label
-    Friend WithEvents Label5 As Label
-    Friend WithEvents Label6 As Label
+    Friend WithEvents VerticalLabel As Label
+    Friend WithEvents HorizontalLabel As Label
+    Friend WithEvents AltitudeLabel As Label
+    Friend WithEvents ScoreLabel As Label
+    Friend WithEvents TimeLabel As Label
+    Friend WithEvents FuelLabel As Label
 End Class
