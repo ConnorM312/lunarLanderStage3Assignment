@@ -73,11 +73,23 @@
     <Import Include="System.Threading.Tasks" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Diagnostics.Designer.vb">
+      <DependentUpon>Diagnostics.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Diagnostics.vb">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="Game.vb">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="Game.Designer.vb">
       <DependentUpon>Game.vb</DependentUpon>
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="HighScore.Designer.vb">
+      <DependentUpon>HighScore.vb</DependentUpon>
+    </Compile>
+    <Compile Include="HighScore.vb">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="Model.vb" />
@@ -97,10 +109,10 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
-    <Compile Include="titleScreen.Designer.vb">
-      <DependentUpon>titleScreen.vb</DependentUpon>
+    <Compile Include="TitleScreen.Designer.vb">
+      <DependentUpon>TitleScreen.vb</DependentUpon>
     </Compile>
-    <Compile Include="titleScreen.vb">
+    <Compile Include="TitleScreen.vb">
       <SubType>Form</SubType>
     </Compile>
   </ItemGroup>
@@ -114,8 +126,8 @@
       <CustomToolNamespace>My.Resources</CustomToolNamespace>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="titleScreen.resx">
-      <DependentUpon>titleScreen.vb</DependentUpon>
+    <EmbeddedResource Include="TitleScreen.resx">
+      <DependentUpon>TitleScreen.vb</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
@@ -129,6 +141,9 @@
       <LastGenOutput>Settings.Designer.vb</LastGenOutput>
     </None>
     <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\landerWallpaper.jpg" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.VisualBasic.targets" />
 </Project>

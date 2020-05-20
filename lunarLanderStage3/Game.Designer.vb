@@ -34,7 +34,7 @@ Partial Class Game
         '
         'Timer1
         '
-        Me.Timer1.Interval = 1
+        Me.Timer1.Interval = 45
         '
         'VerticalLabel
         '
@@ -126,7 +126,7 @@ Partial Class Game
         Me.MinimizeBox = False
         Me.MinimumSize = New System.Drawing.Size(1600, 900)
         Me.Name = "Game"
-        Me.Text = "Form1"
+        Me.Text = "Lunar Lander"
         Me.ResumeLayout(False)
         Me.PerformLayout()
 

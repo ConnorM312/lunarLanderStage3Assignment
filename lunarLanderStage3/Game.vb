@@ -1,4 +1,6 @@
-﻿'Game.vb = view + controller
+﻿'External references:
+'landerWallpaper.jpg , Photograph: NASA
+'
 Imports System.Drawing.Drawing2D
 
 Public Class Game
@@ -12,30 +14,41 @@ Public Class Game
     Dim terrainSlice(0) As Point
     Dim terrainCollider(0) As Point
 
+    Dim terrainFlatIndex(0) As Integer
+    Dim terrainFlatValues(0) As Integer
+    Dim terrainLandingPoints(0) As Point
+
+    Dim labelMaxInc As Integer = 0
+
     Dim lStats As New landerStatistics
     Dim kPut As New keyInput
 
+
+
     'load
-    Private Sub Form1_Load(sender As Object, e As EventArgs) Handles MyBase.Load
+    Private Sub Game_Load(sender As Object, e As EventArgs) Handles MyBase.Load
 
         'set default values
         setDefaults()
 
-        generateTerrain()
+        Do
+            generateTerrain()
+        Loop While terrainFlatIndex.Length < 2
 
+
+        Me.WindowState = FormWindowState.Maximized
+        titleScreen.Hide()
     End Sub
 
-
-
-    Private Sub Timer1_Tick(sender As Object, e As EventArgs) Handles Timer1.Tick
-        Invalidate()
+    Private Sub Game_FormClosing(sender As Object, e As FormClosingEventArgs) Handles MyBase.FormClosing
+        titleScreen.Show()
     End Sub
-
 
     'main game loop
     Private Sub mainGameLoop(ByVal sender As Object, ByVal e As PaintEventArgs) Handles MyBase.Paint
         Dim whitePen As New Pen(Color.White, 3)
         Dim flamePen As New Pen(Color.FromArgb(168, 5, 5), 3)
+        Dim thickPen As New Pen(Color.White, 7)
         Dim debugPen As New Pen(Color.FromArgb(255, 0, 255), 3)
 
         'set centre position from the top left of the lander.
@@ -46,7 +59,7 @@ Public Class Game
         frameCounter += 1
 
 
-        drawTerrain(whitePen, e)
+        drawTerrain(whitePen, thickPen, e)
 
         updateLabels()
 
@@ -72,6 +85,12 @@ Public Class Game
         CheckFrameRate()
 
     End Sub
+
+
+    Private Sub Timer1_Tick(sender As Object, e As EventArgs) Handles Timer1.Tick
+        Invalidate()
+    End Sub
+
 
     Private Sub generateTerrain()
         'generate terrain into array of points using
@@ -100,11 +119,13 @@ Public Class Game
 
         Dim maxY As Integer = 50
         Dim minY As Integer = Me.Height - 50
-        ReDim terrainSlice(sideSize)
+        Array.Resize(terrainSlice, sideSize)
 
+        Dim prevFlatSection As Boolean = False
+        Dim oldLength As Integer = 1
 
         'converts the 3d heightmap to 2d:
-        'also adds the flat sections, and gets 
+        'also adds the flat sections
         For x As Integer = 0 To terrainSlice.GetLength(0) - 1
             Dim y As Integer = terrainSlice.GetLength(0) / 2
             'Regulate y magnitude, to keep it on the screen
@@ -123,13 +144,34 @@ Public Class Game
             'set flat sections:
             Dim length As Integer = Int((5 * Rnd()) + 1)
 
-            If x > length + 1 And Int((7 * Rnd()) + 1) > 6 Then
-                For b As Integer = 1 To length
+            If x > (oldLength + length) And Int((7 * Rnd()) + 1) > 6 And Not prevFlatSection Then
+                oldLength += x
+
+                For b As Integer = length To 1 Step -1
+                    'go backwards into the already sliced terrain, overwriting the terrain to flat
                     terrainSlice(x - b).Y = rTerrainMap.GetValue(x, y)
                 Next
+
+                'record the flat sections array index
+                If terrainFlatIndex.Length = 1 Then
+                    Array.Resize(terrainFlatIndex, terrainFlatIndex.Length + 1)
+                    terrainFlatIndex(0) = x - length
+                    terrainFlatIndex(terrainFlatIndex.Length - 1) = x
+                Else
+                    Array.Resize(terrainFlatIndex, terrainFlatIndex.Length + 2)
+                    terrainFlatIndex(terrainFlatIndex.Length - 2) = x - length
+                    terrainFlatIndex(terrainFlatIndex.Length - 1) = x
+                End If
+
+                prevFlatSection = True
+            Else
+                prevFlatSection = False
             End If
         Next
 
+        'resize both the landing values array, and the valid landing points array
+        Array.Resize(terrainFlatValues, terrainFlatIndex.Length / 2)
+        Array.Resize(terrainLandingPoints, terrainFlatIndex.Length)
 
 
         'This code ensures that the terrain conforms to the desired heights and depths
@@ -149,8 +191,8 @@ Public Class Game
 
 
         'can also flip terrain upside down if neccessary - provides clearance for start
-        Dim xCoordOfStart As Integer = lStats.position.X / (Me.Width / terrainSlice.GetLength(0))
-        If terrainSlice(xCoordOfStart).Y < lStats.position.X + 200 Then
+        Dim CoordOfStart As Integer = lStats.position.X / (Me.Width / terrainSlice.GetLength(0))
+        If terrainSlice(CoordOfStart).Y < lStats.position.X + 200 Then
             'flip terrain:
             For x As Integer = 0 To terrainSlice.GetLength(0) - 1
                 terrainSlice(x).Y = Me.Height - terrainSlice(x).Y
@@ -231,24 +273,66 @@ Public Class Game
 
 
 
-    Private Sub drawTerrain(whitePen As Pen, e As PaintEventArgs)
+    Private Sub drawTerrain(whitePen As Pen, thickPen As Pen, e As PaintEventArgs)
         'draw terrain:
-        Dim offset As Integer = Me.Width / terrainSlice.GetLength(0)
-        ReDim Preserve terrainCollider(terrainSlice.Length - 1)
+        Dim offset As Integer = Me.Width / (terrainSlice.GetLength(0) - 1)
+
+        Array.Resize(terrainCollider, (terrainSlice.Length))
+
+        Dim lPointArInc As Integer = 0
+        Dim lValArInc As Integer = 0
 
         For i As Integer = 0 To terrainSlice.Length() - 2 Step 1
 
             'need to store this info for collision detection later
-
             Dim offsetPoint As New Point(offset * (i), terrainSlice(i).Y)
             Dim newOffsetPoint As New Point(offset * (i + 1), terrainSlice(i + 1).Y)
             terrainCollider(i) = offsetPoint
             terrainCollider(i + 1) = newOffsetPoint
+
+
             e.Graphics.DrawLine(whitePen, offsetPoint, newOffsetPoint)
 
-        Next
-    End Sub
 
+
+            'also apply offset to the flat sections x coordinates
+            For g As Integer = 0 To terrainFlatIndex.Length - 2 Step 1
+                If terrainFlatIndex(g) = i And g Mod 2 = 0 Then
+                    Dim endFlatOffsetPoint As New Point(offset * terrainFlatIndex(g + 1), terrainSlice(terrainFlatIndex(g + 1)).Y)
+
+                    'render the landing spots thicker
+                    e.Graphics.DrawLine(thickPen, offsetPoint, endFlatOffsetPoint)
+
+                    'add values to the valid landing spots
+                    terrainLandingPoints(lPointArInc) = offsetPoint
+                    terrainLandingPoints(lPointArInc + 1) = endFlatOffsetPoint
+                    lPointArInc += 2
+
+                    'ascribe a value modifier to the landing zone
+                    Dim zoneValue As Integer = (terrainFlatIndex(g + 1) - terrainFlatIndex(g)) / 2 + 1
+                    terrainFlatValues(lValArInc) = zoneValue
+
+
+                    If labelMaxInc <= terrainFlatValues.Length Then
+                        Dim scoreLabel As New Label()
+                        scoreLabel.Text = terrainFlatValues(lValArInc) & "x"
+                        scoreLabel.Location = New Point(CInt((offsetPoint.X + endFlatOffsetPoint.X) / 2), offsetPoint.Y - 20)
+                        scoreLabel.Size = New Size(scoreLabel.PreferredWidth, scoreLabel.PreferredHeight)
+                        scoreLabel.BackColor = Color.Transparent
+                        scoreLabel.ForeColor = Color.White
+                        scoreLabel.AutoSize = True
+                        Console.WriteLine("adding")
+                        Me.Controls.Add(scoreLabel)
+
+                        labelMaxInc += 1
+                    End If
+
+                    lValArInc += 1
+                End If
+            Next
+        Next
+
+    End Sub
 
 
     Private Sub updateLabels()
@@ -416,12 +500,11 @@ Public Class Game
         'Hence, -an abstraction of 25 pixels from the center of the lander will estimate collision detection.
         '-this is because of a similarity in the y axis distance irregardless of rotation.
 
+
         'speed (in user scale) is less than 16 on x and y axis.
         Dim validSpeed As Boolean = Math.Abs(lStats.velocity.X) * 30 < 16 And Math.Abs(lStats.velocity.Y) * 30 < 16
-        Console.WriteLine("velocity X = " & CInt(Math.Abs(lStats.velocity.X) * 30) & " velocity Y = " & CInt(Math.Abs(lStats.velocity.Y) * 30) & " speed is: " & validSpeed)
         'angle +- 5 degrees to the vertical
         Dim validAngle As Boolean = lStats.angle > 255 And lStats.angle < 280
-        Console.WriteLine("angle = " & lStats.angle & " angle is: " & validAngle)
 
         If validSpeed And validAngle Then
             'valid landing has occured, freeze the lander
