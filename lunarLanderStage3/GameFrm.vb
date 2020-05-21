@@ -642,10 +642,10 @@ Public Class GameFrm
         'Hence, -an abstraction of 25 pixels from the center of the lander will estimate collision detection.
         '-this is because of a similarity in the y axis distance irregardless of rotation.
 
-        'speed (in user scale) is less than 9 on x and y axis.
-        Dim validSpeed As Boolean = Math.Abs(lStats.velocity.X) * 30 < 8 And Math.Abs(lStats.velocity.Y) * 30 < 8
-        'angle +- 12 degrees to the vertical (270)
-        Dim validAngle As Boolean = lStats.angle >= 258 And lStats.angle <= 282
+        'speed (in user scale) is less than 15 on x and y axis.
+        Dim validSpeed As Boolean = Math.Abs(lStats.velocity.X) * 30 < 15 And Math.Abs(lStats.velocity.Y) * 30 < 15
+        'angle +- 15 degrees to the vertical (270)
+        Dim validAngle As Boolean = lStats.angle >= 255 And lStats.angle <= 285
 
         If validSpeed And validAngle Then
             Dim valueIndex As Integer
