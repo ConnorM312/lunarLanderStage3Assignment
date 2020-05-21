@@ -25,9 +25,17 @@ Public Class GameFrm
 
     Public finalScore As Integer = 0
 
+    Dim stopWatch As New Stopwatch()
 
 
-    'load
+
+    ''' <summary>
+    ''' The subroutine that is ran upon loading the form. It:
+    ''' Sets default values and calls the generate terrain subroutine.
+    ''' Overall it is responsible for preparing the game level for running, and generating all neccessary data.
+    ''' </summary>
+    ''' <param name="sender">The object that sent the load event.</param>
+    ''' <param name="e">The object providing information about the event.</param>
     Private Sub Game_Load(sender As Object, e As EventArgs) Handles MyBase.Load
 
         'set default values
@@ -45,6 +53,13 @@ Public Class GameFrm
         TitleScreenFrm.Hide()
     End Sub
 
+
+    ''' <summary>
+    ''' The subroutine that is run when the form is closed. (exit x is clicked)
+    ''' It also sets a public global to the score, providing accessibility for other forms.
+    ''' </summary>
+    ''' <param name="sender">The object that sent the event.</param>
+    ''' <param name="e">The object providing information about the event.</param>
     Private Sub Game_FormClosing(sender As Object, e As FormClosingEventArgs) Handles MyBase.FormClosing
         finalScore = lStats.Score
         If lStats.gameOver Then
@@ -55,8 +70,18 @@ Public Class GameFrm
 
     End Sub
 
-    'main game loop
+
+
+    ''' <summary>
+    ''' Main Game Loop:
+    ''' This sub is ran in a looping fashion, dictated by the framerate of the game invalidating the graphics, and thus the Main Game Loop is ran many times per second.
+    ''' It is responsible for calling all the required rendering and logical subroutines.
+    ''' This includes calling subroutines to: render the terrain, apply the effect of movement to the lander, rotate the graphics matrix, drawing the lander and checking if a collision has occured.
+    ''' </summary>
+    ''' <param name="sender">The object that sent the event.</param>
+    ''' <param name="e">The object providing information about the event. -In this case it is PaintEventArgs, because the graphics need to be re-rendered.</param>
     Private Sub mainGameLoop(ByVal sender As Object, ByVal e As PaintEventArgs) Handles MyBase.Paint
+
         CheckFrameRate()
 
         Dim whitePen As New Pen(Color.White, 3)
@@ -71,51 +96,60 @@ Public Class GameFrm
         'increment frameCounter to facilitate measurement of performance
         frameCounter += 1
 
-
         drawTerrain(whitePen, thickPen, e)
 
         updateLabels()
 
         applyRotationalEffects()
 
-
         'apply acceleration of thruster or gravity depending on user input
         applyAccelerationGravityFromUserInput()
-
 
         'debugging lines on screen, also functions as a HUD to make landings easier
         'debugHUD(debugPen, e)
 
-
         'rotates the graphics rendered after this point -lander
         rotateMatrix(e)
 
-
         drawLander(whitePen, flamePen, e)
 
+        'check if collision has occured.
         evaluateGameState(sender, e)
 
     End Sub
 
 
+
+    ''' <summary>
+    ''' The subroutine that invalidates the grapics already rendered, forcing mainGameLoop to run.
+    ''' The timer tick rate influences the speed that the entire game runs at.
+    ''' </summary>
+    ''' <param name="sender">The object that sent the event.</param>
+    ''' <param name="e">The object providing information about the event.</param>
     Private Sub Timer1_Tick(sender As Object, e As EventArgs) Handles Timer1.Tick
         Invalidate()
     End Sub
 
 
+
+    ''' <summary>
+    ''' The subroutine that generates the terrain, calling all the neccessary algorithm subs responsible for this process.
+    ''' This sub is very extensive due to the complexity of the operations. -see journal.
+    ''' First it purges any global variables that may result in distorted re-production of the terrain.
+    ''' Next, it establishes the variables required for the recursiveTerrainAlgorithm.
+    ''' In the recursiveTerrainAlgorithm, (explained more elsewhere) the side lengths of the 3d heightmap array must be of the form 2^n + 1, where n is relative to the level the player is playing on.
+    ''' The higher the n value, the more variation (2^n) appears in the terrain, making landing more difficult.
+    ''' After establishing various parameters, recursiveTerrainMap is called, populating the rTerrainMap array.
+    ''' Next, a slicing process ising a for loop occurs, where a horizontal slither across the center of the 3d array is taken out, and made into a 2d heighmap. -akin to a cross section.
+    ''' Then, inorder to provide landing points, flat sections are added randomly, with a restricted length. These are then indexed in separate data structures for the ability to verify landings.
+    ''' The terrainSlice is then resized by multiplying all points by a predetermined value, to ensured that the random heights of the terrain does not go off the screen.
+    ''' Additionally, to prevent extra difficulty by spawning the lander close to the ground, the terrain is checked if it is too close to the lander, and if it is, then all the y values are flipped, essentially inverting the terrain
+    ''' away from the lander, and innovative technique.
+    ''' NOTE: a significant portion of terrain generation is broken down into various subs that generateTerrain() is responsible for calling, each with less broad logical focus.
+    ''' </summary>
     Private Sub generateTerrain()
 
         purgeRemnants()
-
-        'generate terrain into array of points using
-        '       midpoint dispacement noise (Diamond-Square algorithm)
-        '       https://en.wikipedia.org/wiki/Diamond-square_algorithm#Midpoint_displacement_algorithm
-
-        'Max recursion depth = 11, assuming that 1920 is the total side value of heightmap
-        'I found that:
-        'The relationship between recursion depth and side length of the 3d heightmap array is logarithmic, given by this equation:
-        'https://www.desmos.com/calculator/eie2mmuwzz
-        'NOTE: Since visual basic does not support tail-recursion, infinite recursion is impossible, because the stack will be blown -no infinite load times.
 
         'the length of the side of the square, maintaining 2^n + 1 form, however arrays are from 0 to value, not 1, hence the + 1 is unnecessary
         Dim n As Integer = 6 + level / 3
@@ -190,6 +224,7 @@ Public Class GameFrm
 
         'This code ensures that the terrain conforms to the desired heights and depths
         'It ensures that load times are always the same, with no INFINITE load times. - allows very high heightmap resolution.
+        'THis is because it scales the already generated terrain, rather than completely re-generate it.
         'normalise to zero:
         Dim normaliseAmount As Integer = -maxY
         'scale the array to fit on the screen vertically
@@ -211,16 +246,19 @@ Public Class GameFrm
             For x As Integer = 0 To terrainSlice.GetLength(0) - 1
                 terrainSlice(x).Y = Me.Height - terrainSlice(x).Y
             Next
-            Console.WriteLine("Flip terrain")
         End If
-
-
 
     End Sub
 
 
 
-
+    ''' <summary>
+    '''     terrainStarter is responsible for generating a new instance of my custom TerrainMap class, with custom operations.
+    '''     It sets the correct side size, and then generates the random 4 corner points at the edges of the terrainMap.
+    ''' </summary>
+    ''' <param name="sideSize">The side length of the 3d terrain map, generated by 2^n + 1</param>
+    ''' <param name="random">The pseudo random sequence being passed.</param>
+    ''' <returns>terrainMap, the large multidimensional array of points, as of yet unpopulated.</returns>
     Private Function terrainStarter(sideSize As Integer, random As System.Random) As Model.TerrainMap
         Dim initData(sideSize, sideSize) As Integer
         Dim terrainMap As New TerrainMap(initData)
@@ -236,13 +274,32 @@ Public Class GameFrm
 
 
 
+    ''' <summary>
+    '''     recursiveTerrainAlgorithm is responsible for the implementation of the diamond-square algorithm.
+    '''     Also known as the midpoint displacement algorithm, it comprises of averaging the corners of sucssively smaller squares in the center, and adding a random value.
+    '''     An explaination can be found here:
+    '''     https://en.wikipedia.org/wiki/Diamond-square_algorithm#Midpoint_displacement_algorithm
+    '''
+    '''     Max recursion depth = 11, assuming that 1920 is the total side value of heightmap since (2^11) > 1920
+    '''     I found that:
+    '''     The relationship between recursion depth and side length of the 3d heightmap array is logarithmic, given by this equation:
+    '''     Hence it is viable to implement this algorithm without significant risk of blowing the stack.
+    '''     https://www.desmos.com/calculator/eie2mmuwzz
+    '''     For more analysis of this, see the journal.
+    '''     NOTE: Since visual basic does not support tail-recursion, infinite recursion is impossible, because the stack will be blown -therfore no infinite load times and undesireable behaviour.
+    ''' </summary>
+    ''' <param name="rTerrainMap"></param>
+    ''' <param name="random"></param>
+    ''' <param name="middleIndex"></param>
+    ''' <param name="size"></param>
     Private Sub recursiveTerrainAlgorithm(rTerrainMap As TerrainMap, random As System.Random, middleIndex As Point, size As Integer)
-        'diamond step:
+        'diamond step: (sum the corners at the center.)
         Dim randomMagnitude As Integer = 50
         Dim diamondValues As Integer = rTerrainMap.GetValue(middleIndex.X - size, middleIndex.Y - size) + rTerrainMap.GetValue(middleIndex.X + size, middleIndex.Y - size) + rTerrainMap.GetValue(middleIndex.X - size, middleIndex.Y + size) + rTerrainMap.GetValue(middleIndex.X + size, middleIndex.Y + size)
         rTerrainMap.SetValue((diamondValues / 4) + random.Next(-size * randomMagnitude, size * randomMagnitude), middleIndex.X, middleIndex.Y)
 
-        'square step -> clockwise maybe factor into subroutine?
+        'square step -> in a clockwise direction.
+        'this is where the diamond and the corners are summed to fill in the ever-smaller squares.
         Dim squareValues As Integer = rTerrainMap.GetValue(middleIndex.X, middleIndex.Y - (2 * size)) +
             rTerrainMap.GetValue(middleIndex.X + size, middleIndex.Y - size) +
             rTerrainMap.GetValue(middleIndex.X, middleIndex.Y) +
@@ -267,7 +324,8 @@ Public Class GameFrm
             rTerrainMap.GetValue(middleIndex.X - (2 * size), middleIndex.Y)
         rTerrainMap.SetValue((squareValues / 4) + random.Next(-size * randomMagnitude, size * randomMagnitude), middleIndex.X - size, middleIndex.Y)
 
-
+        'adjusts the parameters specifying the size and location of the squares on which the diamond squar algorithm is run.
+        'this process is recursively making the squares generated from smaller
         Dim newSize As Integer = size / 2
         'Because newSize is an integer, this works:
         If newSize <> 0 Then
@@ -284,13 +342,20 @@ Public Class GameFrm
             newMiddleIndex.Y = middleIndex.Y + newSize
             recursiveTerrainAlgorithm(rTerrainMap, random, newMiddleIndex, newSize)
         End If
-
     End Sub
 
 
 
+    ''' <summary>
+    '''     drawTerrain is responsible for fitting the x axis, and drawing the terrainSlice on the screen. It also draws the thicker flat sections, and generates the multiplier value for them,
+    '''     on the first execution.
+    ''' </summary>
+    ''' <param name="whitePen">The white pen for drawing.</param>
+    ''' <param name="thickPen">THe larger white pen for drawing the flat sections of the terrain.</param>
+    ''' <param name="e">The object providing information about the drawing event.</param>
     Private Sub drawTerrain(whitePen As Pen, thickPen As Pen, e As PaintEventArgs)
-        'draw terrain:
+
+        'calculate the offset required to fit the (comparitively few) points of the terrainSlice onto the screen.
         Dim offset As Integer = Me.Width / (terrainSlice.GetLength(0) - 1)
 
         Array.Resize(terrainCollider, (terrainSlice.Length))
@@ -300,18 +365,17 @@ Public Class GameFrm
 
         For i As Integer = 0 To terrainSlice.Length() - 2 Step 1
 
-            'need to store this info for collision detection later
+            'store these points for collision detection later
             Dim offsetPoint As New Point(offset * (i), terrainSlice(i).Y)
             Dim newOffsetPoint As New Point(offset * (i + 1), terrainSlice(i + 1).Y)
             terrainCollider(i) = offsetPoint
             terrainCollider(i + 1) = newOffsetPoint
 
-
+            'draw the terrain.
             e.Graphics.DrawLine(whitePen, offsetPoint, newOffsetPoint)
 
 
-
-            'also apply offset to the flat sections x coordinates
+            'also apply the fitting offset to the flat sections x coordinates
             For g As Integer = 0 To terrainFlatIndex.Length - 2 Step 1
                 If terrainFlatIndex(g) = i And g Mod 2 = 0 Then
                     Dim endFlatOffsetPoint As New Point(offset * terrainFlatIndex(g + 1), terrainSlice(terrainFlatIndex(g + 1)).Y)
@@ -327,6 +391,7 @@ Public Class GameFrm
                     'ascribe a value modifier to the landing zone
                     terrainFlatValues(lValArInc) = 6 - (terrainFlatIndex(g + 1) - terrainFlatIndex(g))
 
+                    'draw the value modifier to the screen.
                     If labelMaxInc <= terrainFlatValues.Length Then
                         Dim ValueLabel As New Label()
                         ValueLabel.Text = terrainFlatValues(lValArInc) & "x"
@@ -347,6 +412,11 @@ Public Class GameFrm
     End Sub
 
 
+
+    ''' <summary>
+    '''     updateLabels refreshes the labels displaying information to the user, such as the label diplaying the speed.
+    '''     This is performed at the same framerate as the game, and is called from withing the mainGameLoop.
+    ''' </summary>
     Private Sub updateLabels()
         'alter the velocity to seem more speedy and display it
         VerticalLbl.Text = "VERTICAL VELOCITY: " & CInt(lStats.velocity.Y * 30)
@@ -356,6 +426,7 @@ Public Class GameFrm
         TimeLbl.Text = "TIME:  " & CInt(stopWatch.Elapsed.TotalSeconds)
         FuelLbl.Text = "FUEL:  " & CInt(lStats.fuel)
         LevelLbl.Text = "LEVEL: " & level
+        'display [Press Enter] untill the player does so, adivising on how to commence gameplay.
         If lStats.landed = True Then
             LevelLbl.Text = "LEVEL: " & level & " [Press Enter]"
         End If
@@ -363,6 +434,10 @@ Public Class GameFrm
 
 
 
+    ''' <summary>
+    ''' applyRotationEffects rotates the lander around a central point, based on the user pressing the "a" and "d" keys. 
+    ''' It also calculates the thrust x and y components when the lander is on an angle, not firing purely vertical.
+    ''' </summary>
     Private Sub applyRotationalEffects()
         'rotate lander based on user input
         If kPut.a = True And lStats.angle - 0.29 >= 180 And Not lStats.landed Then
@@ -379,6 +454,12 @@ Public Class GameFrm
 
 
 
+    ''' <summary>
+    ''' sums the vectors of acceleration, velocity and gravity, providing accurate and realistic movement, compliant with Newtonian Physics.
+    ''' This fundamental part of the gameplay was important, and great focus was placed on the feel of the gameplay.
+    ''' This sub modifies the lander position dependant on the user input activating the thrusters, or without input, the influence of gravity.
+    ''' The Newtonian feel is achieved by summing vector components, which are my own custom type, facilitating the summing of both x and y at the same time.
+    ''' </summary>
     Private Sub applyAccelerationGravityFromUserInput()
         'apply acceleration of thruster or gravity depending on user input
         If kPut.space And lStats.fuel > 0 And Not lStats.landed Then
@@ -412,6 +493,13 @@ Public Class GameFrm
     End Sub
 
 
+
+
+    ''' <summary>
+    '''     A usefull hud, which when enabled, provides movement and impact data for the user. -Note: this is for the advanced user or developer, not a casual user without access to source code.
+    ''' </summary>
+    ''' <param name="debugPen">The magenta pen used for debug rendering.</param>
+    ''' <param name="e">The object providing information about the event.</param>
     Private Sub debugHUD(debugPen As Pen, e As PaintEventArgs)
         'debug stuff
         Dim retArr As Point() = checkTerrainHeight()
@@ -430,6 +518,13 @@ Public Class GameFrm
     End Sub
 
 
+
+
+    ''' <summary>
+    ''' evaluateGameState is responsible for managing the subroutines relating to the end of the game or next level, and verifies that the state of the landing subroutine
+    ''' </summary>
+    ''' <param name="sender">The object that sent the event.</param>
+    ''' <param name="e">The object providing information about the event.</param>
     Private Sub evaluateGameState(sender As Object, e As System.EventArgs)
         'verify if a collision has occured. Note: the checking of the x coordinate is to prevent a gradient = 0, false crash from occuring.
         If lStats.realPosition.Y + 25 >= checkTerrainHeight(2).Y And lStats.realPosition.X >= 0 Then
@@ -449,6 +544,14 @@ Public Class GameFrm
     End Sub
 
 
+
+    ''' <summary>
+    '''     drawLander draws the lander body from a series of lines, around a central point.
+    '''     Each line is a specific distance and angle from the centeral point, which drawLander calls the inbuilt DrawLine function on.
+    ''' </summary>
+    ''' <param name="whitePen"></param>
+    ''' <param name="flamePen"></param>
+    ''' <param name="e">The object providing information about the event.</param>
     Private Sub drawLander(whitePen As Pen, flamePen As Pen, e As PaintEventArgs)
         Dim landerLinesPosition As New Point(lStats.position.X, lStats.position.Y)
 
@@ -506,9 +609,11 @@ Public Class GameFrm
     End Sub
 
 
-    Dim stopWatch As New Stopwatch()
 
-
+    ''' <summary>
+    '''     CheckFrameRate is more usefull for the developer than the end client. This sub measures the framerate of the logic, though not neccesarily the graphics rendering.
+    '''     Additionally, the subroutine increments the score once per frame, over time.
+    ''' </summary>
     Private Sub CheckFrameRate()
         frameRate = frameCounter / stopWatch.Elapsed.TotalSeconds
         'displays framerate live, facilitating adjustment of timing parameters if the user wishes to troubleshoot
@@ -522,6 +627,12 @@ Public Class GameFrm
     End Sub
 
 
+
+    ''' <summary>
+    '''     landing is called when a collision has occured, and determines if the collsion was at a slow speed and strait angle, on a flat section.
+    '''     If these criteria are fufilled, then the function returns true.
+    ''' </summary>
+    ''' <returns>Boolean, stating whether the landing was successful</returns>
     Private Function landing() As Boolean
         'hitboxes are the lowest possible points, -at all time these are the lander legs' feet
 
@@ -557,7 +668,11 @@ Public Class GameFrm
         End If
     End Function
 
-
+    ''' <summary>
+    ''' rotateMatrix sets all of the graphics drawing on an angle. THis means that any subsequent drawing (e.g. the lander) is rotated by the specified amount.
+    ''' This is how the lander is rotated graphically.
+    ''' </summary>
+    ''' <param name="e"></param>
     Private Sub rotateMatrix(e As PaintEventArgs)
         'rotates the entire graphics rendering around an axis, after the e.Graphics.Transform = myMatrix
         Dim centerOfRotation As New Point(lStats.position.X + 10, lStats.position.Y + 17)
@@ -567,7 +682,12 @@ Public Class GameFrm
         e.Graphics.Transform = myMatrix
     End Sub
 
-
+    ''' <summary>
+    '''     checkTerrainHeight functions to determine the closest edges of the flat terrain segment on the left and right of the lander.
+    '''     From this, it can then deduce the impact point using linear equations. (see desmos)
+    '''     This is then returned in an array of points.
+    ''' </summary>
+    ''' <returns>Array of points</returns>
     Private Function checkTerrainHeight() As Point()
         'find closest points in terrain on left and right of lander
         Dim closestLeft As New Point(0, 0)
@@ -580,7 +700,6 @@ Public Class GameFrm
         Next
 
         'Terrain Collision mk.2-3 (mathematical graphing: https://www.desmos.com/calculator/cizpv1b4bb)
-
         'STEP 1: find gradient between the two points -> irregardless of which is higher
         'prevent NaN gradient (divide by 0) and subsequent overflow:
         If lStats.realPosition.X <= 0 Then
@@ -591,8 +710,6 @@ Public Class GameFrm
 
         'STEP 2: Find the y-value of the line given by equation: y = gradient( lstats.Position.X - closestLeft.X) + closestLeft.Y
         Dim collisionHeight As Integer = gradient * (CDbl(lStats.realPosition.X) - CDbl(closestLeft.X)) + CDbl(closestLeft.Y)
-        'STEP 3: compare:
-        '   -not in this function
 
         'return the collision height as a point
         Dim imPoint As New Point(lStats.realPosition.X, collisionHeight)
@@ -600,15 +717,30 @@ Public Class GameFrm
         Return retArr
     End Function
 
+
+
+    ''' <summary>
+    '''     gameWon is called when a successful landing takes place, and map needs to be re-generated.
+    '''     gameWon then increments level, removes all the controls, including the terrain and UI labels, and then triggers a re-load of the form, with a fresh map.
+    ''' </summary>
+    ''' <param name="sender">The object that sent the event.</param>
+    ''' <param name="e">The object providing information about the event.</param>
     Private Sub gameWon(sender As Object, e As System.EventArgs)
         level += 1
         'restart game, different map
         Me.Controls.Clear() 'removes all the controls on the form
         InitializeComponent() 'load all the controls again
-        Game_Load(sender, e) 'Load everything in your form, load event again
+        Game_Load(sender, e) 'load everything in the form, triggering load event again.
 
     End Sub
 
+
+
+    ''' <summary>
+    ''' gameOver is ran when the player crashes.
+    ''' The remaining fuel is added to the score, and the form is closed
+    ''' A boolean is set which makes the next form loaded be the highscore entering form.
+    ''' </summary>
     Private Sub gameOver()
         'convert remaining fuel to points
         lStats.Score += lStats.fuel
@@ -617,6 +749,11 @@ Public Class GameFrm
         Me.Close()
     End Sub
 
+
+
+    ''' <summary>
+    ''' Purges all the global terrain arrays which are not immediately re-written at launch.
+    ''' </summary>
     Private Sub purgeRemnants()
         ReDim terrainFlatIndex(0)
         ReDim terrainFlatValues(0)
@@ -624,22 +761,14 @@ Public Class GameFrm
 
         labelMaxInc = 0
 
-        'delete the labels
-
-        'Dim controlIterator As Control
-        'For Each controlIterator In Me.Controls
-        '    If (TypeOf controlIterator Is Label) Then
-        '        'For i As Integer = 0 To controlIterator.Text.Length - 1 Step 1
-        '        '    If controlIterator.Text(i) = "x" Then
-        '        '        Debug.WriteLine("removing")
-        '        '        controlIterator.Dispose()
-        '        '    End If
-        '        'Next i
-        '        controlIterator.Dispose()
-        '    End If
-        'Next controlIterator
     End Sub
 
+
+
+    ''' <summary>
+    ''' This subroutine adds invisible labels to the screen, to ensure that there is always a consistent number on the screen, irregardless of the terrain value labels.
+    ''' This is to control the strange phenomena, where more labels results in more frame-rate.
+    ''' </summary>
     Private Sub spamLabels()
         For i As Integer = 0 To (10 - labelMaxInc) Step 1
             Dim SpamLabel As New Label()
@@ -655,7 +784,7 @@ Public Class GameFrm
     End Sub
 
 
-    'catch keyboard input
+
     ''' <summary>
     ''' Function sets boolean values of class keyInput in accordance with KeyDown events
     ''' </summary>
@@ -677,6 +806,13 @@ Public Class GameFrm
                 kPut.enter = True
         End Select
     End Sub
+
+
+    ''' <summary>
+    ''' Function sets boolean values of class keyInput in accordance with KeyUp events
+    ''' </summary>
+    ''' <param name="sender">The object that sent the KeyUp event.</param>
+    ''' <param name="e">The object providing information about the KeyUp event.</param>
     Private Sub Form1_KeyUp(sender As Object, e As KeyEventArgs) Handles Me.KeyUp
         Select Case e.KeyData
             Case Keys.W
@@ -694,6 +830,12 @@ Public Class GameFrm
         End Select
     End Sub
 
+
+
+    ''' <summary>
+    ''' setDefaults sets a series of parameters and globals to their correct states
+    ''' This is called on launch.
+    ''' </summary>
     Private Sub setDefaults()
         Timer1.Enabled = True
         stopWatch.Start()

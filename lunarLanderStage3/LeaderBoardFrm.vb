@@ -1,13 +1,33 @@
 ﻿Public Class LeaderBoardFrm
 
-    Private Sub EnterBtn_Click(sender As Object, e As EventArgs) Handles EnterBtn.Click
+    ''' <summary>
+    '''     Closes the form, and returns the user to the title screen when they press the title screen button
+    ''' </summary>
+    ''' <param name="sender">The object that sent the event.</param>
+    ''' <param name="e">The object providing information about the event.</param>
+    Private Sub titleBtn_Click(sender As Object, e As EventArgs) Handles titleBtn.Click
         Me.Close()
     End Sub
 
+
+
+    ''' <summary>
+    '''     Shows the titleScreen form when the leaderboard form is closing.
+    ''' </summary>
+    ''' <param name="sender">The object that sent the event.</param>
+    ''' <param name="e">The object providing information about the event.</param>
     Private Sub LeaderBoardFrm_FormClosing(sender As Object, e As FormClosingEventArgs) Handles MyBase.FormClosing
         TitleScreenFrm.Show()
     End Sub
 
+
+
+    ''' <summary>
+    '''     The subroutine is triggered upon the loading of the leaderboard screen. Accordingly, it is responsible for orchestrating the other subroutines which get, sort and load the leaderboard into the list
+    '''     for display.
+    ''' </summary>
+    ''' <param name="sender">The object that sent the event.</param>
+    ''' <param name="e">The object providing information about the event.</param>
     Private Sub LeaderBoardFrm_Load(sender As Object, e As EventArgs) Handles MyBase.Load
         TitleScreenFrm.Hide()
 
@@ -22,12 +42,27 @@
         outputToList(sortedArr)
     End Sub
 
+
+
+    ''' <summary>
+    '''     A subroutine which takes in a sorted array and iterates over it outputting each name and score to the list.
+    ''' </summary>
+    ''' <param name="sortedArr"> The sorted array, with names follwed by scores.</param>
     Private Sub outputToList(sortedArr() As String)
         For i As Integer = 0 To sortedArr.Length - 1 Step 2
             HighScoresLstbx.Items.Add(sortedArr(i) & ": " & sortedArr(i + 1))
         Next
     End Sub
 
+
+
+    ''' <summary>
+    '''     rejoin() takes in an unsorted array of names and scores, and a sorted array, comprising only of scores. It then proceeds to use the unsorted list to find the names for the sorted scores
+    '''     in the sorted list. Once all the scores can be attributed the correct name, by searching the array, the now sorted array of names and scores will be outputted in an array.
+    ''' </summary>
+    ''' <param name="unsortedArr"></param>
+    ''' <param name="sortedScoresArr"></param>
+    ''' <returns></returns>
     Private Function rejoin(unsortedArr() As String, sortedScoresArr() As Integer) As String()
         Dim doubleInc As Integer = 1
         Dim sortedArr(unsortedArr.Length - 1) As String
@@ -50,6 +85,13 @@
         Return sortedArr
     End Function
 
+
+
+    ''' <summary>
+    '''     getScores is a function which accesses the highscores text file, and, using a streamreader dumps the contents of the file into a string. Following that, it proceeds to iterate over the
+    '''     string, splitting it into name and score, and entering these values into an unsorted array.
+    ''' </summary>
+    ''' <returns>an unsorted array comprising usernames and scores.</returns>
     Private Function getScores() As String()
         Dim unsortedArr(0) As String
         'dumps all the text file into dumpString
@@ -75,6 +117,13 @@
         Return unsortedArr
     End Function
 
+
+
+    ''' <summary>
+    '''     iterate extracts the unsorted scores from the unsorted array.
+    ''' </summary>
+    ''' <param name="unsortedArr"></param>
+    ''' <returns>iterate returns an unsorted array of only scores.</returns>
     Private Function iterate(unsortedArr As String()) As Integer()
         Dim scores(unsortedArr.Length / 2 - 1) As Integer
         Dim inc As Integer = 0
@@ -85,6 +134,11 @@
         Return scores
     End Function
 
+    ''' <summary>
+    '''     sortScores uses a selection sort, in order to sort an unsorted array of scores into a sorted array of scores for output.
+    ''' </summary>
+    ''' <param name="unsortedScoresArr"></param>
+    ''' <returns>A sorted array of scores.</returns>
     Private Function sortScores(unsortedScoresArr As Integer()) As Integer()
         'selection sort, of scores -for lookup later
         Dim lengthUnsorted = unsortedScoresArr.Length - 1
@@ -113,6 +167,11 @@
         Return unsortedScoresArr
     End Function
 
+    ''' <summary>
+    '''     swapVals() is a simple subroutine for swapping the value of two memory addresses, because of its byRef parameters.
+    ''' </summary>
+    ''' <param name="a">first parameter</param>
+    ''' <param name="b">second parameter</param>
     Private Sub swapVals(ByRef a As Integer, ByRef b As Integer)
         Dim c = a
         a = b

@@ -25,7 +25,7 @@ Partial Class LeaderBoardFrm
         Me.TitleLbl = New System.Windows.Forms.Label()
         Me.SubtitleLbl = New System.Windows.Forms.Label()
         Me.HighScoresLstbx = New System.Windows.Forms.ListBox()
-        Me.EnterBtn = New System.Windows.Forms.Button()
+        Me.titleBtn = New System.Windows.Forms.Button()
         Me.SuspendLayout()
         '
         'TitleLbl
@@ -64,17 +64,17 @@ Partial Class LeaderBoardFrm
         Me.HighScoresLstbx.Size = New System.Drawing.Size(447, 284)
         Me.HighScoresLstbx.TabIndex = 9
         '
-        'EnterBtn
+        'titleBtn
         '
-        Me.EnterBtn.BackColor = System.Drawing.Color.FromArgb(CType(CType(32, Byte), Integer), CType(CType(32, Byte), Integer), CType(CType(32, Byte), Integer))
-        Me.EnterBtn.Font = New System.Drawing.Font("Microsoft Sans Serif", 12.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.EnterBtn.ForeColor = System.Drawing.Color.White
-        Me.EnterBtn.Location = New System.Drawing.Point(313, 401)
-        Me.EnterBtn.Name = "EnterBtn"
-        Me.EnterBtn.Size = New System.Drawing.Size(174, 28)
-        Me.EnterBtn.TabIndex = 10
-        Me.EnterBtn.Text = "Title Screen"
-        Me.EnterBtn.UseVisualStyleBackColor = False
+        Me.titleBtn.BackColor = System.Drawing.Color.FromArgb(CType(CType(32, Byte), Integer), CType(CType(32, Byte), Integer), CType(CType(32, Byte), Integer))
+        Me.titleBtn.Font = New System.Drawing.Font("Microsoft Sans Serif", 12.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.titleBtn.ForeColor = System.Drawing.Color.White
+        Me.titleBtn.Location = New System.Drawing.Point(313, 401)
+        Me.titleBtn.Name = "titleBtn"
+        Me.titleBtn.Size = New System.Drawing.Size(174, 28)
+        Me.titleBtn.TabIndex = 10
+        Me.titleBtn.Text = "Title Screen"
+        Me.titleBtn.UseVisualStyleBackColor = False
         '
         'LeaderBoardFrm
         '
@@ -82,7 +82,7 @@ Partial Class LeaderBoardFrm
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.BackColor = System.Drawing.Color.Black
         Me.ClientSize = New System.Drawing.Size(800, 450)
-        Me.Controls.Add(Me.EnterBtn)
+        Me.Controls.Add(Me.titleBtn)
         Me.Controls.Add(Me.HighScoresLstbx)
         Me.Controls.Add(Me.SubtitleLbl)
         Me.Controls.Add(Me.TitleLbl)
@@ -96,5 +96,5 @@ Partial Class LeaderBoardFrm
     Friend WithEvents TitleLbl As Label
     Friend WithEvents SubtitleLbl As Label
     Friend WithEvents HighScoresLstbx As ListBox
-    Friend WithEvents EnterBtn As Button
+    Friend WithEvents titleBtn As Button
 End Class
