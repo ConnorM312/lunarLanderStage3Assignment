@@ -73,23 +73,23 @@
     <Import Include="System.Threading.Tasks" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Diagnostics.Designer.vb">
-      <DependentUpon>Diagnostics.vb</DependentUpon>
-    </Compile>
-    <Compile Include="Diagnostics.vb">
+    <Compile Include="GameFrm.vb">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Game.vb">
+    <Compile Include="GameFrm.Designer.vb">
+      <DependentUpon>GameFrm.vb</DependentUpon>
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Game.Designer.vb">
-      <DependentUpon>Game.vb</DependentUpon>
+    <Compile Include="HighScoreFrm.Designer.vb">
+      <DependentUpon>HighScoreFrm.vb</DependentUpon>
+    </Compile>
+    <Compile Include="HighScoreFrm.vb">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="HighScore.Designer.vb">
-      <DependentUpon>HighScore.vb</DependentUpon>
+    <Compile Include="LeaderBoardFrm.Designer.vb">
+      <DependentUpon>LeaderBoardFrm.vb</DependentUpon>
     </Compile>
-    <Compile Include="HighScore.vb">
+    <Compile Include="LeaderBoardFrm.vb">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="Model.vb" />
@@ -109,16 +109,22 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
-    <Compile Include="TitleScreen.Designer.vb">
-      <DependentUpon>TitleScreen.vb</DependentUpon>
+    <Compile Include="TitleScreenFrm.Designer.vb">
+      <DependentUpon>TitleScreenFrm.vb</DependentUpon>
     </Compile>
-    <Compile Include="TitleScreen.vb">
+    <Compile Include="TitleScreenFrm.vb">
       <SubType>Form</SubType>
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Game.resx">
-      <DependentUpon>Game.vb</DependentUpon>
+    <EmbeddedResource Include="GameFrm.resx">
+      <DependentUpon>GameFrm.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="HighScoreFrm.resx">
+      <DependentUpon>HighScoreFrm.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="LeaderBoardFrm.resx">
+      <DependentUpon>LeaderBoardFrm.vb</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="My Project\Resources.resx">
       <Generator>VbMyResourcesResXFileCodeGenerator</Generator>
@@ -126,8 +132,8 @@
       <CustomToolNamespace>My.Resources</CustomToolNamespace>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="TitleScreen.resx">
-      <DependentUpon>TitleScreen.vb</DependentUpon>
+    <EmbeddedResource Include="TitleScreenFrm.resx">
+      <DependentUpon>TitleScreenFrm.vb</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
@@ -144,6 +150,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\landerWallpaper.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\astronaut.jpg" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.VisualBasic.targets" />
 </Project>

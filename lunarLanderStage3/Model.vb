@@ -28,6 +28,8 @@
         Public thrustConst As Double
         Public fuel As Double
         Public landed As Boolean
+        Public Score As Integer
+        Public gameOver As Boolean
     End Class
 
     Public Class TerrainMap
@@ -65,6 +67,7 @@
         Public s As Boolean = False
         Public d As Boolean = False
         Public space As Boolean = False
+        Public Enter As Boolean = False
 
     End Class
 End Module

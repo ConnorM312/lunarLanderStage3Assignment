@@ -32,7 +32,7 @@ Namespace My
         
         <Global.System.Diagnostics.DebuggerStepThroughAttribute()>  _
         Protected Overrides Sub OnCreateMainForm()
-            Me.MainForm = Global.lunarLanderStage3.titleScreen
+            Me.MainForm = Global.lunarLanderStage3.TitleScreenFrm
         End Sub
     End Class
 End Namespace
