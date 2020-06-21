@@ -139,7 +139,7 @@
     ''' </summary>
     ''' <param name="unsortedScoresArr"></param>
     ''' <returns>A sorted array of scores.</returns>
-    Private Function sortScores(unsortedScoresArr As Integer()) As Integer()
+    Public Function sortScores(unsortedScoresArr As Integer()) As Integer()
         'selection sort, of scores -for lookup later
         Dim lengthUnsorted = unsortedScoresArr.Length - 1
         Dim passes = 0

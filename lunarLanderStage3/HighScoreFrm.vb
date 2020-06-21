@@ -73,7 +73,7 @@
     ''' </summary>
     ''' <param name="name">the username inputed to be sanitized.</param>
     ''' <returns>boolean regarding state of validation</returns>
-    Private Function checkCharacters(name As String) As Boolean
+    Public Function checkCharacters(name As String) As Boolean
         For i As Integer = 0 To name.Length - 1
             If Asc(name(i)) < 65 Or (Asc(name(i)) > 90 And Asc(name(i)) < 97) Or Asc(name(i)) > 122 Then
                 Return False
@@ -88,7 +88,7 @@
     ''' </summary>
     ''' <param name="name">the username inputed to be sanitized.</param>
     ''' <returns>boolean regarding state of validation</returns>
-    Private Function checkLength(name As String) As Boolean
+    Public Function checkLength(name As String) As Boolean
         Select Case name
             Case ""
                 Return False
