@@ -650,11 +650,11 @@ Public Class GameFrm
         If validSpeed And validAngle Then
             Dim valueIndex As Integer
             'check landing location is flat and valid
-            For i As Integer = 0 To terrainLandingPoints.Length - 2 Step 2
+            For i As Integer = 1 To terrainLandingPoints.Length - 2 Step 2
                 If lStats.realPosition.X - 10 >= terrainLandingPoints(i).X And lStats.realPosition.X + 10 <= terrainLandingPoints(i + 1).X Then
                     'add fuel according to the landing pad amount
-                    lStats.fuel += terrainFlatValues(i) * 100
-                    lStats.Score += terrainFlatValues(i) * 150
+                    lStats.fuel += terrainFlatValues(i - 1) * 100
+                    lStats.Score += terrainFlatValues(i - 1) * 150
                     'return true because a valid landing has occured
                     Return True
                 End If
