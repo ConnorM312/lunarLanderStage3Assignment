@@ -94,6 +94,8 @@
                 Return False
             Case name.Length > 10
                 Return False
+                'error found in testing -by the nature of a casewhere, this is never ran.
+                'potential fix: Select case length, but even then it is not intended for an infinite number of cases
             Case Else
                 Return True
         End Select
